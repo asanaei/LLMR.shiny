@@ -1,0 +1,26 @@
+Package: LLMR.shiny
+Title: Shared Shiny Substrate for LLMR Family GUIs
+Version: 0.1.0
+Authors@R:
+    person("Ali", "Sanaei", , "sanaei@uchicago.edu", role = c("aut", "cre"))
+Description: Provides the package-agnostic shell every LLMR-family graphical
+    interface is built on: provider and model selection,
+    environment-variable-only API key handling, a deterministic offline demo
+    runner and the live runner seam, session cost accounting, error-to-banner
+    mapping, comma-separated-value upload and column mapping, and a display layer
+    over the shared diagnostics() and report() generics. Graphical interfaces for
+    the method packages import these helpers rather than each reimplementing
+    them, so a fix to the substrate reaches every product at once.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports:
+    shiny,
+    bslib,
+    stats,
+    utils
+Suggests:
+    LLMR,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
