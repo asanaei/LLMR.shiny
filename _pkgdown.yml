@@ -1,0 +1,14 @@
+url: https://asanaei.github.io/LLMR.shiny/
+template:
+  bootstrap: 5
+title: LLMR.shiny
+development:
+  mode: auto
+home:
+  links:
+  - text: Source on GitHub
+    href: https://github.com/asanaei/LLMR.shiny
+navbar:
+  structure:
+    left: [reference, articles, news]
+    right: [github]
