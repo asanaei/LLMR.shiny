@@ -1,5 +1,11 @@
 # LLMR.shiny
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/asanaei/LLMR.shiny/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/asanaei/LLMR.shiny/actions/workflows/R-CMD-check.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Website](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://asanaei.github.io/LLMR.shiny/)
+<!-- badges: end -->
+
 The shared Shiny substrate for the LLMR family of GUIs. It holds the
 package-agnostic shell so each GUI is a thin module layer rather than a fresh
 re-implementation:
