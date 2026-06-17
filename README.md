@@ -1,4 +1,4 @@
-# LLMR.shiny
+# LLMR.shiny <img src="man/figures/logo.png" align="right" width="120" alt="LLMR.shiny icon" />
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/asanaei/LLMR.shiny/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/asanaei/LLMR.shiny/actions/workflows/R-CMD-check.yaml)
