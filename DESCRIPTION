@@ -1,6 +1,6 @@
 Package: LLMR.shiny
 Title: Shared Shiny Substrate for LLMR Family GUIs
-Version: 0.1.0
+Version: 0.1.1
 Authors@R:
     person("Ali", "Sanaei", , "sanaei@uchicago.edu", role = c("aut", "cre"))
 Description: Provides the package-agnostic shell every LLMR-family graphical
@@ -22,5 +22,6 @@ Imports:
     utils
 Suggests:
     LLMR,
+    DT,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

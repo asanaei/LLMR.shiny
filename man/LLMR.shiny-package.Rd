@@ -6,7 +6,9 @@
 \alias{LLMR.shiny-package}
 \title{LLMR.shiny: Shared Shiny Substrate for LLMR Family GUIs}
 \description{
-The package-agnostic shell every LLMR-family GUI is built on: provider and model selection, environment-variable-only API key handling, a deterministic offline demo runner and the live runner seam, session cost accounting, error-to-banner mapping, CSV upload and column mapping, and a display layer over the shared diagnostics() and report() generics. GUIs for the method packages (LLMRcontent, LLMRpanel, FocusGroup) import these helpers rather than each reimplementing them, so a fix to the substrate reaches every product at once.
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
+Provides the package-agnostic shell every LLMR-family graphical interface is built on: provider and model selection, environment-variable-only API key handling, a deterministic offline demo runner and the live runner seam, session cost accounting, error-to-banner mapping, comma-separated-value upload and column mapping, and a display layer over the shared diagnostics() and report() generics. Graphical interfaces for the method packages import these helpers rather than each reimplementing them, so a fix to the substrate reaches every product at once.
 }
 \author{
 \strong{Maintainer}: Ali Sanaei \email{sanaei@uchicago.edu}
