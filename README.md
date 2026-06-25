@@ -6,17 +6,17 @@
 [![Website](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://asanaei.github.io/LLMR.shiny/)
 <!-- badges: end -->
 
-The shared Shiny substrate for the LLMR family of GUIs. It holds the
-package-agnostic shell so each GUI is a thin module layer rather than a fresh
-re-implementation:
+The shared Shiny substrate for the LLMR family of GUIs. It defines the shell
+each GUI builds on, so a new interface supplies only its package-specific module
+code:
 
 - provider and model selection (`provider_registry()`, `shell_sidebar()`)
 - environment-variable-only API key handling (`key_state()`, never a paste, never
   a printed value)
-- a deterministic offline demo runner and the live runner seam (`demo_runner()`,
+- a deterministic offline demo runner and a live runner (`demo_runner()`,
   `build_runner()`)
 - session cost accounting (`cost_empty()`, `cost_tile()`)
-- error-to-banner mapping, auth-aware (`safe_llmr_call()`, `llmr_error_banner()`)
+- authentication-sensitive error banners (`safe_llmr_call()`, `llmr_error_banner()`)
 - CSV upload and column mapping (`read_csv_upload()`, `map_columns()`)
 - a display layer over the shared `diagnostics()` / `report()` generics
   (`report_text()`, `diagnostics_table()`)
@@ -44,8 +44,8 @@ function(input, output, session) {
 ```
 
 `shared` gives your module `provider()`, `model()`, `mode()`, `key()`,
-`can_run()`, `set_plan()`, and `add_usage()`. Update the substrate once and every
-GUI inherits the change.
+`can_run()`, `set_plan()`, and `add_usage()`. A change here is available to any
+GUI that imports the shared shell.
 
 ## Install
 
