@@ -6,9 +6,11 @@
 [![Website](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://asanaei.github.io/LLMR.shiny/)
 <!-- badges: end -->
 
-The shared Shiny substrate for the LLMR family of GUIs. It defines the shell
-each GUI builds on, so a new interface supplies only its package-specific module
-code:
+The shared Shiny substrate for the LLMR family of GUIs. Interfaces such as
+LLMRpanel, LLMRcontent, and FocusGroup build their apps on this shell and
+supply only their package-specific module code; end users normally get
+LLMR.shiny as a dependency of those GUI packages rather than installing it on
+its own. The shell provides:
 
 - provider and model selection (`provider_registry()`, `shell_sidebar()`)
 - environment-variable-only API key handling (`key_state()`, never a paste, never
@@ -49,7 +51,18 @@ GUI that imports the shared shell.
 
 ## Install
 
+End users rarely need this step; the GUI packages pull LLMR.shiny in for you.
+To install it directly, from CRAN once released:
+
 ```r
-remotes::install_github("asanaei/LLMR")
+install.packages("LLMR.shiny")
+```
+
+or the development version:
+
+```r
 remotes::install_github("asanaei/LLMR.shiny")
 ```
+
+LLMR itself is optional (Suggests): the substrate runs its demo mode without
+it, and uses it when present for live runs and the shared generics.

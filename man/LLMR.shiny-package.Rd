@@ -4,11 +4,19 @@
 \name{LLMR.shiny-package}
 \alias{LLMR.shiny}
 \alias{LLMR.shiny-package}
-\title{LLMR.shiny: Shared Shiny Substrate for LLMR Family GUIs}
+\title{LLMR.shiny: Shared 'Shiny' Substrate for 'LLMR' Family GUIs}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Provides the package-agnostic shell every LLMR-family graphical interface is built on: provider and model selection, environment-variable-only API key handling, a deterministic offline demo runner and the live runner seam, session cost accounting, error-to-banner mapping, comma-separated-value upload and column mapping, and a display layer over the shared diagnostics() and report() generics. Graphical interfaces for the method packages import these helpers rather than each reimplementing them, so a fix to the substrate reaches every product at once.
+Provides the shared shell that 'LLMR'-family graphical interfaces are built on. It includes provider and model selection, environment-variable-based API-key handling, demo and live runners, session cost accounting, error banners, comma-separated-value upload and column mapping, and display helpers for the shared diagnostics() and report() generics. Graphical interfaces for the method packages import these helpers rather than each reimplementing them, so a fix here is available to every interface that depends on it.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/asanaei/LLMR.shiny}
+  \item Report bugs at \url{https://github.com/asanaei/LLMR.shiny/issues}
+}
+
 }
 \author{
 \strong{Maintainer}: Ali Sanaei \email{sanaei@uchicago.edu}
