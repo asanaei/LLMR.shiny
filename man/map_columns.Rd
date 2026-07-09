@@ -13,7 +13,9 @@ map_columns(data, text_col, label_col = NULL, keep_original = TRUE)
 
 \item{label_col}{Optional name of the column to become \code{labels}.}
 
-\item{keep_original}{Keep the original columns alongside the mapped ones.}
+\item{keep_original}{Keep the original columns alongside the mapped ones.
+A pre-existing \code{text} (or \code{labels}) column that is not itself the mapped
+source is preserved under a \code{.original} suffix rather than overwritten.}
 }
 \value{
 A data frame with a \code{text} column (and \code{labels} when requested),

@@ -8,20 +8,20 @@
 #' UI for the persona selector module
 #'
 #' Renders the selectable persona table. Pair with [persona_selector_server()].
+#' The table's height is set by the `height` argument of
+#' [persona_selector_server()], which controls the scrollable body.
 #'
 #' @param id Module id.
-#' @param height CSS height for the scrollable table body. Default `"260px"`.
 #' @return A Shiny UI element (a `DT` output).
 #' @seealso [persona_selector_server()].
 #' @export
-persona_selector_ui <- function(id, height = "260px") {
+persona_selector_ui <- function(id) {
   ns <- shiny::NS(id)
-  if (!requireNamespace("DT", quietly = TRUE)) {
+  if (!pkg_available("DT")) {
     return(shiny::tags$div(class = "text-muted",
       "Install the 'DT' package to browse and select personas."))
   }
-  shiny::tagList(
-    shiny::tags$div(`data-height` = height, DT::DTOutput(ns("table"))))
+  shiny::tagList(DT::DTOutput(ns("table")))
 }
 
 #' Server for the persona selector module
@@ -37,14 +37,19 @@ persona_selector_ui <- function(id, height = "260px") {
 #'   building one. Defaults to [LLMR::llm_persona_overview()] when LLMR is
 #'   available, else the first columns of `data`.
 #' @param page_length Rows per page in the table. Default `8`.
-#' @param height CSS height for the table body. Default `"260px"`.
+#' @param height CSS height for the scrollable table body. Default `"260px"`.
 #' @return A `reactive` returning an integer vector of selected row indices into
-#'   `data` (`integer(0)` when nothing is selected).
+#'   `data` (`integer(0)` when nothing is selected). When `DT` is not installed
+#'   the module renders nothing and the reactive is always `integer(0)`,
+#'   matching the install guidance shown by [persona_selector_ui()].
 #' @seealso [persona_selector_ui()].
 #' @export
 persona_selector_server <- function(id, data, overview = NULL,
                                     page_length = 8L, height = "260px") {
   shiny::moduleServer(id, function(input, output, session) {
+    if (!pkg_available("DT")) {
+      return(shiny::reactive(integer(0)))
+    }
     data_r <- if (shiny::is.reactive(data)) data else shiny::reactive(data)
 
     overview_r <- shiny::reactive({

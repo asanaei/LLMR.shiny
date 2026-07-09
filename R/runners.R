@@ -53,16 +53,22 @@ demo_runner <- function(responder = NULL,
         vapply(df$messages, function(m) paste(unlist(m), collapse = " "), character(1))
       } else rep("", n)
     }
+    # an NA input text behaves as empty: the responder sees "", and the token
+    # stub stays a number, so session totals remain consistent
+    texts[is.na(texts)] <- ""
 
     response <- vapply(texts, function(t) as.character(responder(t %||% "")),
                        character(1), USE.NAMES = FALSE)
 
     df$response_text <- response
-    df$success <- TRUE
+    # rep(), not a scalar, so a zero-row experiments frame passes through
+    df$success <- rep(TRUE, n)
     df$sent_tokens <- pmax(1L, nchar(texts) %/% 4L)
     df$rec_tokens <- pmax(1L, nchar(response) %/% 4L)
     df$total_tokens <- df$sent_tokens + df$rec_tokens
-    df$response_id <- paste0("demo-", seq_len(n))
+    # paste0() treats a zero-length argument as "", yielding a length-1 result;
+    # keep the ids zero-length for a zero-row frame
+    df$response_id <- if (n > 0) paste0("demo-", seq_len(n)) else character(0)
     annotate_demo_result(df)
   }
   structure(runner, class = c("llmrshiny_demo_runner", "function"))
@@ -128,12 +134,17 @@ extract_token_counts <- function(x, fallback_calls = 0L) {
     return(list(calls = fallback_calls, sent = 0L, received = 0L, total = 0L))
   }
 
-  sent <- sum(as.numeric(df$sent_tokens %||% 0), na.rm = TRUE)
-  received <- sum(as.numeric(df$rec_tokens %||% 0), na.rm = TRUE)
-  # Prefer the per-row total column; fall back to sent + received (both already
-  # row-summed). Parentheses matter: %||% binds looser than +.
+  sent_rows <- as.numeric(df$sent_tokens %||% 0)
+  rec_rows <- as.numeric(df$rec_tokens %||% 0)
+  sent <- sum(sent_rows, na.rm = TRUE)
+  received <- sum(rec_rows, na.rm = TRUE)
+  # Prefer the per-row total column, but where a row's total is NA fall back to
+  # that row's sent + received, so the total stays consistent with the parts.
   total <- if (!is.null(df$total_tokens)) {
-    sum(as.numeric(df$total_tokens), na.rm = TRUE)
+    total_rows <- as.numeric(df$total_tokens)
+    fallback_rows <- ifelse(is.na(sent_rows), 0, sent_rows) +
+      ifelse(is.na(rec_rows), 0, rec_rows)
+    sum(ifelse(is.na(total_rows), fallback_rows, total_rows), na.rm = TRUE)
   } else {
     sent + received
   }

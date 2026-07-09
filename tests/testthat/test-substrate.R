@@ -108,3 +108,96 @@ test_that("validate_column_mapping gives a clear message for no selection", {
   expect_error(validate_column_mapping(df, ""), "No text column")
   expect_true(validate_column_mapping(df, "a"))
 })
+
+test_that("LLMR classed conditions are recognized by class, not a field", {
+  # constructed exactly as LLMR's .llmr_error() classes them; offline
+  cond_of <- function(category) {
+    structure(
+      class = c(paste0("llmr_api_", category, "_error"),
+                "llmr_api_error", "error", "condition"),
+      list(message = "boom", call = NULL)
+    )
+  }
+  expect_identical(condition_category(cond_of("auth")), "auth")
+  expect_identical(condition_category(cond_of("rate_limit")), "rate_limit")
+  expect_identical(condition_category(cond_of("param")), "param")
+  expect_true(is_auth_error(cond_of("auth")))
+  expect_false(is_auth_error(cond_of("server")))
+  # a plain condition still resolves to NA / not-auth
+  plain <- simpleError("boom")
+  expect_identical(condition_category(plain), NA_character_)
+  expect_false(is_auth_error(plain))
+  # the field fallback still works for foreign conditions
+  foreign <- simpleError("boom"); foreign$category <- "auth"
+  expect_true(is_auth_error(foreign))
+})
+
+test_that("an auth error becomes the key banner through safe_llmr_call", {
+  auth_cond <- structure(
+    class = c("llmr_api_auth_error", "llmr_api_error", "error", "condition"),
+    list(message = "401 unauthorized", call = NULL)
+  )
+  res <- safe_llmr_call(stop(auth_cond), provider = "groq")
+  expect_false(res$ok)
+  txt <- paste(as.character(res$ui), collapse = " ")
+  expect_match(txt, "GROQ_API_KEY")
+  expect_match(txt, "No API key")
+  # a non-auth error shows its message, not the key banner
+  res2 <- safe_llmr_call(stop("plain failure"), provider = "groq")
+  txt2 <- paste(as.character(res2$ui), collapse = " ")
+  expect_match(txt2, "plain failure")
+  expect_no_match(txt2, "GROQ_API_KEY")
+})
+
+test_that("map_columns(keep_original = TRUE) preserves pre-existing columns", {
+  df <- data.frame(text = c("orig A", "orig B"),
+                   labels = c("L1", "L2"),
+                   body = c("body A", "body B"),
+                   lab2 = c("x", "y"),
+                   stringsAsFactors = FALSE)
+  m <- map_columns(df, "body", "lab2", keep_original = TRUE)
+  expect_equal(m$text, c("body A", "body B"))
+  expect_equal(m$labels, c("x", "y"))
+  expect_equal(m$text.original, c("orig A", "orig B"))
+  expect_equal(m$labels.original, c("L1", "L2"))
+  expect_equal(nrow(m), 2)
+  # mapping a column onto itself adds no suffix column
+  m2 <- map_columns(df, "text", keep_original = TRUE)
+  expect_false("text.original" %in% names(m2))
+  expect_equal(m2$text, c("orig A", "orig B"))
+})
+
+test_that("demo runner survives a zero-row frame and NA input text", {
+  r <- demo_runner()
+  z <- r(data.frame(text = character(0)))
+  expect_equal(nrow(z), 0)
+  expect_true(all(c("response_text", "success", "sent_tokens",
+                    "rec_tokens", "total_tokens", "response_id") %in% names(z)))
+  expect_length(z$response_id, 0)
+
+  out <- r(data.frame(text = c("hello there", NA)))
+  expect_false(anyNA(out$sent_tokens))
+  expect_false(anyNA(out$total_tokens))
+  expect_equal(out$total_tokens, out$sent_tokens + out$rec_tokens)
+})
+
+test_that("cost tile shows the planned line only for a pending run", {
+  s <- cost_set_plan(cost_empty(), 10, "tuning")
+  txt <- paste(as.character(cost_tile(s)), collapse = " ")
+  expect_match(txt, "tuning: 10 calls")
+
+  s <- cost_add_usage(s, list(calls = 10, sent = 40, received = 20, total = 60))
+  txt2 <- paste(as.character(cost_tile(s)), collapse = " ")
+  expect_no_match(txt2, "No pending run: 0 calls", fixed = TRUE)
+  expect_match(txt2, "No pending run")
+})
+
+test_that("extract_token_counts falls back row-wise for NA totals", {
+  df <- data.frame(response_text = c("a", "b"),
+                   sent_tokens = c(5, 6), rec_tokens = c(2, 3),
+                   total_tokens = c(7, NA))
+  tc <- extract_token_counts(df)
+  expect_equal(tc$total, 16L)
+  expect_equal(tc$sent, 11L)
+  expect_equal(tc$received, 5L)
+})

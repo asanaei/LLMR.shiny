@@ -62,6 +62,8 @@ validate_column_mapping <- function(data, text_col, label_col = NULL) {
 #' @param text_col Name of the column to become `text`.
 #' @param label_col Optional name of the column to become `labels`.
 #' @param keep_original Keep the original columns alongside the mapped ones.
+#'   A pre-existing `text` (or `labels`) column that is not itself the mapped
+#'   source is preserved under a `.original` suffix rather than overwritten.
 #' @return A data frame with a `text` column (and `labels` when requested),
 #'   always with one row per input row.
 #' @export
@@ -69,9 +71,21 @@ map_columns <- function(data, text_col, label_col = NULL, keep_original = TRUE) 
   data <- as.data.frame(data, stringsAsFactors = FALSE)
   validate_column_mapping(data, text_col, label_col)
 
+  want_labels <- !is.null(label_col) && nzchar(label_col)
   out <- if (keep_original) data else data.frame(row.names = seq_len(nrow(data)))
+  if (keep_original) {
+    # The mapped names must not clobber a user's pre-existing column of the
+    # same name; move such a column aside under a ".original" suffix.
+    sources <- c(text = text_col, if (want_labels) c(labels = label_col))
+    for (target in names(sources)) {
+      if (target %in% names(out) && !identical(sources[[target]], target)) {
+        names(out)[names(out) == target] <-
+          make.unique(c(names(out), paste0(target, ".original")))[ncol(out) + 1L]
+      }
+    }
+  }
   out$text <- as.character(data[[text_col]])
-  if (!is.null(label_col) && nzchar(label_col)) {
+  if (want_labels) {
     out$labels <- as.character(data[[label_col]])
   }
   out

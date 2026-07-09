@@ -47,12 +47,18 @@ cost_add_usage <- function(state, tokens) {
 #' @export
 cost_tile <- function(state) {
   state <- state %||% cost_empty()
+  planned <- as.integer(state$planned_calls %||% 0L)
+  planned_line <- if (!is.na(planned) && planned > 0L) {
+    shiny::tags$p(paste0(state$planned_label %||% "Planned next run", ": ",
+                         planned, " calls"))
+  } else {
+    shiny::tags$p("No pending run")
+  }
   bslib::value_box(
     title = "Session usage",
     value = paste0(state$calls, " calls"),
     showcase = shiny::tags$span("Tokens"),
     shiny::tags$p(paste0("Sent: ", state$sent, " | Received: ", state$received)),
-    shiny::tags$p(paste0(state$planned_label %||% "Planned next run", ": ",
-                         state$planned_calls, " calls"))
+    planned_line
   )
 }

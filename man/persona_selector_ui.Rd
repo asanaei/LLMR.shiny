@@ -4,18 +4,18 @@
 \alias{persona_selector_ui}
 \title{UI for the persona selector module}
 \usage{
-persona_selector_ui(id, height = "260px")
+persona_selector_ui(id)
 }
 \arguments{
 \item{id}{Module id.}
-
-\item{height}{CSS height for the scrollable table body. Default \code{"260px"}.}
 }
 \value{
 A Shiny UI element (a \code{DT} output).
 }
 \description{
 Renders the selectable persona table. Pair with \code{\link[=persona_selector_server]{persona_selector_server()}}.
+The table's height is set by the \code{height} argument of
+\code{\link[=persona_selector_server]{persona_selector_server()}}, which controls the scrollable body.
 }
 \seealso{
 \code{\link[=persona_selector_server]{persona_selector_server()}}.

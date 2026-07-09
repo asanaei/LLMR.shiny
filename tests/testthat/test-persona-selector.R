@@ -29,3 +29,16 @@ test_that("the selector falls back to the first columns without an overview", {
     expect_equal(session$returned(), 2L)
   })
 })
+
+test_that("the selector degrades without DT instead of erroring", {
+  skip_if_not_installed("shiny")
+  local_mocked_bindings(pkg_available = function(package) FALSE)
+  ui <- persona_selector_ui("p")
+  expect_s3_class(ui, "shiny.tag")
+  expect_match(paste(as.character(ui), collapse = " "), "DT")
+
+  d <- data.frame(a = 1:3)
+  shiny::testServer(persona_selector_server, args = list(id = "p", data = d), {
+    expect_equal(session$returned(), integer(0))
+  })
+})

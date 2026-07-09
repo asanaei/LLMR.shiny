@@ -62,22 +62,31 @@ install_guidance_ui <- function(package, title = package) {
 
 #' Error category of a caught condition
 #'
-#' Reads the `category` field that LLMR's classed errors carry.
+#' LLMR's classed errors carry their category in the condition class
+#' (`llmr_api_auth_error`, `llmr_api_rate_limit_error`, and so on); the class is
+#' read first. A plain `category` field or attribute is honored as a fallback
+#' for conditions built by other tools.
 #'
 #' @param e A condition.
-#' @return A length-1 character category, or `NA`.
+#' @return A length-1 character category (e.g. `"auth"`, `"rate_limit"`,
+#'   `"param"`, `"server"`, `"unknown"`), or `NA`.
 #' @export
 condition_category <- function(e) {
+  hit <- grep("^llmr_api_(.+)_error$", class(e), value = TRUE)
+  if (length(hit) > 0) {
+    return(sub("^llmr_api_(.+)_error$", "\\1", hit[[1]]))
+  }
   e$category %||% attr(e, "category", exact = TRUE) %||% NA_character_
 }
 
 #' Is a caught condition an auth error?
 #'
 #' @param e A condition.
-#' @return `TRUE` when the condition's category is `"auth"`.
+#' @return `TRUE` when the condition is an LLMR `llmr_api_auth_error` or its
+#'   category otherwise resolves to `"auth"`.
 #' @export
 is_auth_error <- function(e) {
-  identical(condition_category(e), "auth")
+  inherits(e, "llmr_api_auth_error") || identical(condition_category(e), "auth")
 }
 
 #' Map a caught LLM error to a banner card

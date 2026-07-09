@@ -1,27 +1,31 @@
 ## Submission
 
-First submission of LLMR.shiny, the shared Shiny substrate for the LLMR family of
-GUIs. It depends on LLMR (Imports), which is submitted ahead of it; this package
-is submitted only after LLMR is on CRAN.
+Initial submission of LLMR.shiny, the shared Shiny substrate that the LLMR
+family of GUI packages build on.
+
+LLMR is in Suggests, not Imports: the substrate runs fully offline (demo
+runner, key-state tiles, CSV mapping, cost accounting) without it, and every
+use of LLMR in the code is guarded by requireNamespace("LLMR", quietly = TRUE)
+with a documented fallback. The same holds for the other soft dependency, DT.
+The test suite passes with and without the suggested packages
+(_R_CHECK_FORCE_SUGGESTS_=false).
 
 ## Test environments
 
-- local macOS (R 4.4.3)
-- R CMD check --as-cran
+- local macOS (Darwin 25.5.0), R 4.4.3
+- R CMD check --as-cran --no-manual on the built tarball, with NOT_CRAN=false
+  and _R_CHECK_FORCE_SUGGESTS_=false
 
 ## R CMD check results
 
-0 errors | 0 warnings | notes as below.
+0 errors | 0 warnings | 2 notes
 
-- "checking for future file timestamps ... NOTE" and "checking HTML version of
-  manual ... NOTE": both environmental (a local clock artifact and an older system
-  `tidy` not recognizing valid HTML5 in R's generated help); neither reproduces on
-  CRAN.
 - "New submission": expected for a first submission.
-
-The `Remotes` field has been removed; LLMR is a normal CRAN dependency.
+- "checking for future file timestamps ... NOTE: unable to verify current
+  time": environmental (the check machine could not reach a time server); it
+  does not reproduce on CRAN's builders.
 
 ## Reverse dependencies
 
-The author's packages that bundle a Shiny GUI (LLMRcontent, LLMRpanel, and
-FocusGroup) Suggest this package and are submitted after it.
+None on CRAN. The author's GUI packages (LLMRcontent, LLMRpanel, FocusGroup)
+will depend on this package and are submitted after it.
