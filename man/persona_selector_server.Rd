@@ -23,11 +23,13 @@ available, else the first columns of \code{data}.}
 
 \item{page_length}{Rows per page in the table. Default \code{8}.}
 
-\item{height}{CSS height for the table body. Default \code{"260px"}.}
+\item{height}{CSS height for the scrollable table body. Default \code{"260px"}.}
 }
 \value{
 A \code{reactive} returning an integer vector of selected row indices into
-\code{data} (\code{integer(0)} when nothing is selected).
+\code{data} (\code{integer(0)} when nothing is selected). When \code{DT} is not installed
+the module renders nothing and the reactive is always \code{integer(0)},
+matching the install guidance shown by \code{\link[=persona_selector_ui]{persona_selector_ui()}}.
 }
 \description{
 Renders a compact overview of \code{data} as a multi-select table and returns the

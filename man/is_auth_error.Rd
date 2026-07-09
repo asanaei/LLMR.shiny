@@ -10,7 +10,8 @@ is_auth_error(e)
 \item{e}{A condition.}
 }
 \value{
-\code{TRUE} when the condition's category is \code{"auth"}.
+\code{TRUE} when the condition is an LLMR \code{llmr_api_auth_error} or its
+category otherwise resolves to \code{"auth"}.
 }
 \description{
 Is a caught condition an auth error?

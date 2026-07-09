@@ -10,8 +10,12 @@ condition_category(e)
 \item{e}{A condition.}
 }
 \value{
-A length-1 character category, or \code{NA}.
+A length-1 character category (e.g. \code{"auth"}, \code{"rate_limit"},
+\code{"param"}, \code{"server"}, \code{"unknown"}), or \code{NA}.
 }
 \description{
-Reads the \code{category} field that LLMR's classed errors carry.
+LLMR's classed errors carry their category in the condition class
+(\code{llmr_api_auth_error}, \code{llmr_api_rate_limit_error}, and so on); the class is
+read first. A plain \code{category} field or attribute is honored as a fallback
+for conditions built by other tools.
 }
