@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Provides the shared shell that 'LLMR'-family graphical interfaces are built on. It includes provider and model selection, environment-variable-based API-key handling, demo and live runners, session cost accounting, error banners, comma-separated-value upload and column mapping, and display helpers for the shared diagnostics() and report() generics. Graphical interfaces for the method packages import these helpers rather than each reimplementing them, so a fix here is available to every interface that depends on it.
+The shell from which the 'LLMR' family's graphical interfaces are assembled. Interface conventions are implemented once here, so a fix reaches every interface built on this package.
 }
 \seealso{
 Useful links:
