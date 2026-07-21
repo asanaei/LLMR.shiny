@@ -9,10 +9,11 @@ extract_token_counts(x, fallback_calls = 0L)
 \arguments{
 \item{x}{A result data frame (or list containing one).}
 
-\item{fallback_calls}{Call count to assume when none can be read.}
+\item{fallback_calls}{Call count to use when \code{x} has no result frame.}
 }
 \value{
-A list \code{list(calls, sent, received, total)}.
+A list with token totals and either \code{calls}, when explicit call
+provenance is available, or \code{result_rows}.
 }
 \description{
 Extract call/token counts from a result frame

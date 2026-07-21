@@ -12,17 +12,21 @@ supply only their package-specific module code; end users normally get
 LLMR.shiny as a dependency of those GUI packages rather than installing it on
 its own. The shell provides:
 
-- provider and model selection (`provider_registry()`, `shell_sidebar()`)
+- provider and model selection with overrideable model defaults
+  (`provider_registry()`, `shell_sidebar()`)
 - environment-variable-only API key handling (`key_state()`, never a paste, never
   a printed value)
-- a deterministic offline demo runner and a live runner (`demo_runner()`,
-  `build_runner()`)
-- session cost accounting (`cost_empty()`, `cost_tile()`)
+- a deterministic offline demo runner with durable result provenance and a
+  callable live runner (`demo_runner()`, `build_runner()`)
+- session usage accounting (`usage_empty()`, `usage_tile()`)
 - authentication-sensitive error banners (`safe_llmr_call()`, `llmr_error_banner()`)
 - CSV upload and column mapping (`read_csv_upload()`, `map_columns()`)
 - a display layer over the shared `diagnostics()` / `report()` generics
   (`report_text()`, `diagnostics_table()`)
 - the standard reactive context every GUI server builds (`shell_context()`)
+
+Model fields start blank unless local defaults are supplied, for example with
+`options(LLMR.shiny.default_models = c(groq = "your-current-model"))`.
 
 ## For GUI authors
 
@@ -64,5 +68,5 @@ or the development version:
 remotes::install_github("asanaei/LLMR.shiny")
 ```
 
-LLMR itself is optional (Suggests): the substrate runs its demo mode without
-it, and uses it when present for live runs and the shared generics.
+LLMR itself is optional for installation: demo mode runs without it. Live
+runner calls and live configuration construction require LLMR.

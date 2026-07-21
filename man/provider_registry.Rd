@@ -4,11 +4,18 @@
 \alias{provider_registry}
 \title{Provider registry}
 \usage{
-provider_registry()
+provider_registry(
+  default_models = getOption("LLMR.shiny.default_models", character())
+)
+}
+\arguments{
+\item{default_models}{A named character vector of provider model defaults.}
 }
 \value{
 A data frame of \code{provider}, \code{display}, and \code{default_model}.
 }
 \description{
-Provider registry
+Model defaults are optional because provider aliases can change between
+package releases. Set the \code{LLMR.shiny.default_models} option to a named
+character vector to supply local defaults.
 }

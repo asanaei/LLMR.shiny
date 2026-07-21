@@ -93,19 +93,24 @@ map_columns <- function(data, text_col, label_col = NULL, keep_original = TRUE) 
 
 #' Coerce an arbitrary result to a display table
 #'
-#' Data frames and matrices pass through (head-limited); a list yields its first
-#' data frame; anything else becomes a one-column capture of its structure.
+#' Data frames and matrices pass through (head-limited). For a list, name the
+#' component to display. Anything else becomes a one-column capture of its
+#' structure.
 #'
 #' @param x Any object.
 #' @param max_rows Row cap for the display.
+#' @param component For a list, the name of the component to display.
 #' @return A data frame.
 #' @export
-as_display_table <- function(x, max_rows = 500L) {
+as_display_table <- function(x, max_rows = 500L, component = NULL) {
   if (is.data.frame(x)) return(utils::head(as.data.frame(x), max_rows))
   if (is.matrix(x)) return(utils::head(as.data.frame(x), max_rows))
   if (is.list(x)) {
-    dfs <- Filter(is.data.frame, x)
-    if (length(dfs) > 0) return(utils::head(as.data.frame(dfs[[1]]), max_rows))
+    if (length(component) != 1L || !is.character(component) ||
+        !component %in% names(x)) {
+      stop("`component` must name one component of a list result.", call. = FALSE)
+    }
+    return(as_display_table(x[[component]], max_rows = max_rows))
   }
   data.frame(
     output = paste(utils::capture.output(utils::str(x, max.level = 2)), collapse = "\n"),

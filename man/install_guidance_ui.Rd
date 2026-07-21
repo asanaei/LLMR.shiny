@@ -12,7 +12,7 @@ install_guidance_ui(package, title = package)
 \item{title}{Card title (defaults to the package name).}
 }
 \value{
-A \code{bslib::card} with an \code{install_github()} snippet.
+A \code{bslib::card} with an installation command.
 }
 \description{
 Install-guidance card for a missing package

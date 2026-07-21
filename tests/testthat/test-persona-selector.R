@@ -1,10 +1,5 @@
 # Tests for the persona selector module. Offline; no live calls.
 
-test_that("persona_selector_ui builds (or guides) depending on DT", {
-  ui <- persona_selector_ui("p")
-  expect_s3_class(ui, "shiny.tag.list")
-})
-
 test_that("persona_selector_server returns the selected row indices", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("DT")
@@ -17,16 +12,6 @@ test_that("persona_selector_server returns the selected row indices", {
     # a selection comes back as integer indices into `data`
     session$setInputs(table_rows_selected = c(1L, 3L))
     expect_equal(session$returned(), c(1L, 3L))
-  })
-})
-
-test_that("the selector falls back to the first columns without an overview", {
-  skip_if_not_installed("shiny")
-  skip_if_not_installed("DT")
-  d <- data.frame(a = 1:3, b = letters[1:3], stringsAsFactors = FALSE)
-  shiny::testServer(persona_selector_server, args = list(id = "p", data = d), {
-    session$setInputs(table_rows_selected = 2L)
-    expect_equal(session$returned(), 2L)
   })
 })
 

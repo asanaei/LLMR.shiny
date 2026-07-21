@@ -12,8 +12,7 @@ build_runner(mode, responder = NULL)
 \item{responder}{Optional demo responder (see \code{\link[=demo_runner]{demo_runner()}}).}
 }
 \value{
-A demo runner for \code{"demo"}, or \code{NULL} for \code{"live"} (use the package
-default downstream).
+A callable experiments-frame runner.
 }
 \description{
 Build a runner for a mode

@@ -2,7 +2,7 @@
 % Please edit documentation in R/display.R
 \name{shell_sidebar}
 \alias{shell_sidebar}
-\title{The standard GUI sidebar: provider, model, mode, key tile, cost tile}
+\title{The standard GUI sidebar: provider, model, mode, key tile, usage tile}
 \usage{
 shell_sidebar(id = NULL, default_provider = "groq")
 }
@@ -15,5 +15,5 @@ shell_sidebar(id = NULL, default_provider = "groq")
 A \code{bslib::sidebar}.
 }
 \description{
-The standard GUI sidebar: provider, model, mode, key tile, cost tile
+The standard GUI sidebar: provider, model, mode, key tile, usage tile
 }

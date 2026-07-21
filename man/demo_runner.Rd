@@ -2,18 +2,25 @@
 % Please edit documentation in R/runners.R
 \name{demo_runner}
 \alias{demo_runner}
+\alias{print.llmrshiny_demo_result}
 \title{A deterministic offline demo runner}
 \usage{
 demo_runner(
   responder = NULL,
   text_cols = c("text", "unit", "document", "prompt", "input")
 )
+
+\method{print}{llmrshiny_demo_result}(x, ...)
 }
 \arguments{
 \item{responder}{A function mapping a single input text to a response string.
 Defaults to echoing a short stub.}
 
 \item{text_cols}{Candidate column names to read the input text from.}
+
+\item{x}{A demo result.}
+
+\item{...}{Passed to the next print method.}
 }
 \value{
 A runner function of class \code{llmrshiny_demo_runner}.

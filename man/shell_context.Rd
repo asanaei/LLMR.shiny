@@ -15,7 +15,7 @@ A shared-context list.
 \description{
 Call once at the top of a GUI's server with the top-level \code{input}, \code{output},
 \code{session}. It keeps the model field in sync with the provider, renders the
-key and cost tiles, tracks usage, and returns a list of reactives and
+key and usage tiles, tracks usage, and returns a list of reactives and
 mutators (\code{provider}, \code{model}, \code{mode}, \code{key}, \code{can_run}, \code{set_plan},
 \code{add_usage}) for the per-package modules to consume.
 }

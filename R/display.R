@@ -2,7 +2,16 @@
 # The display layer over the shared LLMR generics, plus the standard sidebar and
 # the shared reactive context every GUI's server builds. These are what let a
 # new GUI be a thin module layer: it calls shell_sidebar() in the UI and
-# shell_context() in the server and gets keys, runner, and cost wiring for free.
+# shell_context() in the server and gets keys, runner, and usage wiring for free.
+
+llmr_method_exists <- function(generic, x) {
+  if (!pkg_available("LLMR")) return(FALSE)
+  any(vapply(class(x), function(class) {
+    !is.null(utils::getS3method(
+      generic, class, optional = TRUE, envir = asNamespace("LLMR")
+    ))
+  }, logical(1)))
+}
 
 #' Render an object's `report()` prose, falling back to print output
 #'
@@ -11,13 +20,10 @@
 #' @return A character scalar of report text.
 #' @export
 report_text <- function(x, ...) {
-  out <- tryCatch(
-    if (requireNamespace("LLMR", quietly = TRUE)) LLMR::report(x, ...) else NULL,
-    error = function(e) NULL
-  )
-  if (is.null(out)) {
-    out <- paste(utils::capture.output(print(x)), collapse = "\n")
+  if (!llmr_method_exists("report", x)) {
+    return(paste(utils::capture.output(print(x)), collapse = "\n"))
   }
+  out <- LLMR::report(x, ...)
   if (!is.character(out)) out <- paste(utils::capture.output(print(out)), collapse = "\n")
   paste(out, collapse = "\n")
 }
@@ -29,15 +35,13 @@ report_text <- function(x, ...) {
 #' @return A data frame, or `NULL` when no method applies.
 #' @export
 diagnostics_table <- function(x, ...) {
-  out <- tryCatch(
-    if (requireNamespace("LLMR", quietly = TRUE)) LLMR::diagnostics(x, ...) else NULL,
-    error = function(e) NULL
-  )
+  if (!llmr_method_exists("diagnostics", x)) return(NULL)
+  out <- LLMR::diagnostics(x, ...)
   if (is.null(out)) return(NULL)
   as_display_table(out)
 }
 
-#' The standard GUI sidebar: provider, model, mode, key tile, cost tile
+#' The standard GUI sidebar: provider, model, mode, key tile, usage tile
 #'
 #' @param id The module namespace (or `NULL` for top-level inputs).
 #' @param default_provider Provider selected initially.
@@ -55,7 +59,7 @@ shell_sidebar <- function(id = NULL, default_provider = "groq") {
                         choices = c("Demo" = "demo", "Live" = "live"),
                         selected = "demo", inline = TRUE),
     shiny::uiOutput(ns("key_state_tile")),
-    shiny::uiOutput(ns("cost_tile"))
+    shiny::uiOutput(ns("usage_tile"))
   )
 }
 
@@ -63,7 +67,7 @@ shell_sidebar <- function(id = NULL, default_provider = "groq") {
 #'
 #' Call once at the top of a GUI's server with the top-level `input`, `output`,
 #' `session`. It keeps the model field in sync with the provider, renders the
-#' key and cost tiles, tracks usage, and returns a list of reactives and
+#' key and usage tiles, tracks usage, and returns a list of reactives and
 #' mutators (`provider`, `model`, `mode`, `key`, `can_run`, `set_plan`,
 #' `add_usage`) for the per-package modules to consume.
 #'
@@ -76,10 +80,10 @@ shell_context <- function(input, output, session) {
                            value = provider_default_model(input$provider))
   }, ignoreInit = TRUE)
 
-  cost_state <- shiny::reactiveVal(cost_empty())
+  usage_state <- shiny::reactiveVal(usage_empty())
 
   output$key_state_tile <- shiny::renderUI(key_state_tile(key_state(input$provider)))
-  output$cost_tile <- shiny::renderUI(cost_tile(cost_state()))
+  output$usage_tile <- shiny::renderUI(usage_tile(usage_state()))
 
   list(
     provider = shiny::reactive(input$provider),
@@ -90,10 +94,10 @@ shell_context <- function(input, output, session) {
       identical(input$run_mode, "demo") || isTRUE(key_state(input$provider)$found)
     }),
     set_plan = function(calls, label = "Next run") {
-      cost_state(cost_set_plan(cost_state(), calls, label))
+      usage_state(usage_set_plan(usage_state(), calls, label))
     },
     add_usage = function(tokens) {
-      cost_state(cost_add_usage(cost_state(), tokens))
+      usage_state(usage_add(usage_state(), tokens))
     }
   )
 }

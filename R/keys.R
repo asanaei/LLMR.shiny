@@ -5,19 +5,22 @@
 
 #' Provider registry
 #'
+#' Model defaults are optional because provider aliases can change between
+#' package releases. Set the `LLMR.shiny.default_models` option to a named
+#' character vector to supply local defaults.
+#'
+#' @param default_models A named character vector of provider model defaults.
 #' @return A data frame of `provider`, `display`, and `default_model`.
 #' @export
-provider_registry <- function() {
+provider_registry <- function(
+    default_models = getOption("LLMR.shiny.default_models", character())) {
+  providers <- c("groq", "openai", "anthropic", "together", "deepseek")
+  defaults <- unname(default_models[providers])
+  defaults[is.na(defaults)] <- ""
   data.frame(
-    provider = c("groq", "openai", "anthropic", "together", "deepseek"),
+    provider = providers,
     display = c("Groq", "OpenAI", "Anthropic", "Together", "DeepSeek"),
-    default_model = c(
-      "llama-3.3-70b-versatile",
-      "gpt-4.1-mini",
-      "claude-3-5-sonnet-latest",
-      "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-      "deepseek-chat"
-    ),
+    default_model = defaults,
     stringsAsFactors = FALSE
   )
 }

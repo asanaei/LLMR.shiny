@@ -4,17 +4,20 @@
 \alias{as_display_table}
 \title{Coerce an arbitrary result to a display table}
 \usage{
-as_display_table(x, max_rows = 500L)
+as_display_table(x, max_rows = 500L, component = NULL)
 }
 \arguments{
 \item{x}{Any object.}
 
 \item{max_rows}{Row cap for the display.}
+
+\item{component}{For a list, the name of the component to display.}
 }
 \value{
 A data frame.
 }
 \description{
-Data frames and matrices pass through (head-limited); a list yields its first
-data frame; anything else becomes a one-column capture of its structure.
+Data frames and matrices pass through (head-limited). For a list, name the
+component to display. Anything else becomes a one-column capture of its
+structure.
 }

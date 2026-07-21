@@ -2,7 +2,7 @@
 % Please edit documentation in R/runners.R
 \name{build_llm_config}
 \alias{build_llm_config}
-\title{Build an LLM config, falling back to a plain list without LLMR}
+\title{Build an LLM config}
 \usage{
 build_llm_config(provider, model, ...)
 }
@@ -12,8 +12,8 @@ build_llm_config(provider, model, ...)
 \item{...}{Passed to \code{\link[LLMR:llm_config]{LLMR::llm_config()}} (e.g. \code{temperature}).}
 }
 \value{
-An \code{llm_config} when LLMR is available, else a tagged list.
+An \code{LLMR::llm_config}.
 }
 \description{
-Build an LLM config, falling back to a plain list without LLMR
+Build an LLM config
 }

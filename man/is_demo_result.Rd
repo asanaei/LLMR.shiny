@@ -10,7 +10,7 @@ is_demo_result(x)
 \item{x}{A result object.}
 }
 \value{
-\code{TRUE} when marked by \code{\link[=annotate_demo_result]{annotate_demo_result()}}.
+\code{TRUE} when the result has demo class or provenance fields.
 }
 \description{
 Is a result a demo result?

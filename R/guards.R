@@ -1,53 +1,37 @@
 # guards.R ---------------------------------------------------------------------
-# Defensive helpers shared by every LLMR-family GUI: a null-coalescing operator,
-# package-availability checks, install guidance, error-to-banner mapping, and a
-# call wrapper that turns an auth failure into a key banner instead of a crash.
+# Guards shared by every LLMR-family GUI: package availability, installation
+# guidance, error-to-banner mapping, and an auth-aware call wrapper.
 
-#' Null-coalescing operator
-#'
-#' Returns `x` unless it is `NULL` or empty, in which case `y`.
-#'
-#' @param x,y Values; `x` is preferred when non-empty.
-#' @return `x` if non-`NULL` and length > 0, otherwise `y`.
-#' @name null-coalesce
-#' @usage x \%||\% y
-#' @export
 `%||%` <- function(x, y) {
   if (is.null(x) || length(x) == 0) y else x
 }
 
-#' Is a package installed?
-#'
-#' @param package Package name.
-#' @return `TRUE` if the package can be loaded.
-#' @export
 pkg_available <- function(package) {
   requireNamespace(package, quietly = TRUE)
 }
 
-#' GitHub remote for an LLMR-family package
-#'
-#' @param package Package name.
-#' @return A `"owner/repo"` string for `remotes::install_github()`.
-#' @export
 github_remote_for <- function(package) {
   remotes <- c(
-    LLMR = "asanaei/LLMR",
     LLMRcontent = "asanaei/LLMRcontent",
     LLMRpanel = "asanaei/LLMRpanel",
     FocusGroup = "asanaei/FocusGroup"
   )
-  remotes[[package]] %||% paste0("asanaei/", package)
+  if (package %in% names(remotes)) remotes[[package]] else NULL
 }
 
 #' Install-guidance card for a missing package
 #'
 #' @param package Package name.
 #' @param title Card title (defaults to the package name).
-#' @return A `bslib::card` with an `install_github()` snippet.
+#' @return A `bslib::card` with an installation command.
 #' @export
 install_guidance_ui <- function(package, title = package) {
   remote <- github_remote_for(package)
+  command <- if (is.null(remote)) {
+    paste0('install.packages("', package, '")')
+  } else {
+    paste0('remotes::install_github("', remote, '")')
+  }
   bslib::card(
     class = "border-warning",
     bslib::card_header(paste(title, "install needed")),
@@ -55,7 +39,7 @@ install_guidance_ui <- function(package, title = package) {
       shiny::tags$p(
         paste0(package, " is not installed. This app keeps running, but this workflow needs the package.")
       ),
-      shiny::tags$pre(paste0('remotes::install_github("', remote, '")'))
+      shiny::tags$pre(command)
     )
   )
 }

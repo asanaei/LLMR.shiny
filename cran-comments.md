@@ -3,12 +3,11 @@
 Initial submission of LLMR.shiny, the shared Shiny substrate that the LLMR
 family of GUI packages build on.
 
-LLMR is in Suggests, not Imports: the substrate runs fully offline (demo
-runner, key-state tiles, CSV mapping, cost accounting) without it, and every
-use of LLMR in the code is guarded by requireNamespace("LLMR", quietly = TRUE)
-with a documented fallback. The same holds for the other soft dependency, DT.
-The test suite passes with and without the suggested packages
-(_R_CHECK_FORCE_SUGGESTS_=false).
+LLMR is in Suggests, not Imports: the demo runner, key-state tiles, CSV
+mapping, and usage accounting work without it. Live runner calls and live
+configuration construction require LLMR and report that requirement when it is
+unavailable. DT remains an optional dependency. The test suite passes without
+forced suggested packages (_R_CHECK_FORCE_SUGGESTS_=false).
 
 ## Test environments
 
