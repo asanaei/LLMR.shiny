@@ -1,7 +1,10 @@
 ## Submission
 
-Initial submission of LLMR.shiny, the shared Shiny substrate that the LLMR
-family of GUI packages build on.
+Update to 0.1.2, a fast-follow correction of the 0.1.1 release: the live
+runner builder returns a callable runner, demo results carry durable
+provenance, usage helpers use token vocabulary, and two error-display
+internals left the exported surface while the demo annotator joined it
+(downstream family packages call it across the namespace boundary).
 
 LLMR is in Suggests, not Imports: the demo runner, key-state tiles, CSV
 mapping, and usage accounting work without it. Live runner calls and live
@@ -17,12 +20,15 @@ forced suggested packages (_R_CHECK_FORCE_SUGGESTS_=false).
 
 ## R CMD check results
 
-0 errors | 0 warnings | 2 notes
+0 errors | 0 warnings | 3 notes
 
 - "New submission": expected for a first submission.
 - "checking for future file timestamps ... NOTE: unable to verify current
   time": environmental (the check machine could not reach a time server); it
   does not reproduce on CRAN's builders.
+- "checking HTML version of manual ... NOTE": emitted by an older
+  system `tidy` that does not recognize the HTML5 elements R generates;
+  it does not reproduce on CRAN.
 
 ## Reverse dependencies
 
