@@ -3,7 +3,7 @@
 \name{demo_runner}
 \alias{demo_runner}
 \alias{print.llmrshiny_demo_result}
-\title{A deterministic offline demo runner}
+\title{An offline demonstration response function}
 \usage{
 demo_runner(
   responder = NULL,
@@ -18,15 +18,16 @@ Defaults to echoing a short stub.}
 
 \item{text_cols}{Candidate column names to read the input text from.}
 
-\item{x}{A demo result.}
+\item{x}{A demonstration result.}
 
 \item{...}{Passed to the next print method.}
 }
 \value{
-A runner function of class \code{llmrshiny_demo_runner}.
+A response function of class \code{llmrshiny_demo_runner}.
 }
 \description{
-Returns a function with the \code{.runner} contract \verb{(experiments, ...)} that adds
-LLMR-shaped response columns. The per-row response text is decided by
-\code{responder}, a function \code{(text) -> character}. Results are marked as demo.
+Returns a function accepted by \code{.runner} arguments. It adds LLMR response
+columns to a request data frame. The per-row response text is decided by
+\code{responder}, a function \code{(text) -> character}. Results are marked as
+demonstrations.
 }

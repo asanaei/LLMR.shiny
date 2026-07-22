@@ -4,11 +4,11 @@
 \name{LLMR.shiny-package}
 \alias{LLMR.shiny}
 \alias{LLMR.shiny-package}
-\title{LLMR.shiny: Shared 'Shiny' Substrate for 'LLMR' Family GUIs}
+\title{LLMR.shiny: Shared 'Shiny' Components for 'LLMR' Family Applications}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-The shell from which the 'LLMR' family's graphical interfaces are assembled: provider and key handling, demo and live runners, and shared display conventions.
+Reusable 'Shiny' user interface and server components from which the graphical applications in the 'LLMR' package family are assembled.
 }
 \seealso{
 Useful links:

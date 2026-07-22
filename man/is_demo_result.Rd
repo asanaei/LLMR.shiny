@@ -2,7 +2,7 @@
 % Please edit documentation in R/runners.R
 \name{is_demo_result}
 \alias{is_demo_result}
-\title{Is a result a demo result?}
+\title{Is a result a demonstration result?}
 \usage{
 is_demo_result(x)
 }
@@ -10,8 +10,8 @@ is_demo_result(x)
 \item{x}{A result object.}
 }
 \value{
-\code{TRUE} when the result has demo class or provenance fields.
+\code{TRUE} when the result has the demonstration class or source fields.
 }
 \description{
-Is a result a demo result?
+Is a result a demonstration result?
 }

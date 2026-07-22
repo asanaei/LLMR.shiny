@@ -2,7 +2,7 @@
 % Please edit documentation in R/runners.R
 \name{annotate_demo_result}
 \alias{annotate_demo_result}
-\title{Mark a result frame as demo output}
+\title{Mark a result frame as demonstration output}
 \usage{
 annotate_demo_result(x)
 }
@@ -10,15 +10,14 @@ annotate_demo_result(x)
 \item{x}{A data frame of results.}
 }
 \value{
-\code{x} with the two provenance columns and the demo class added.
+\code{x} with the two source columns and the demonstration class added.
 }
 \description{
-Stamps the demo provenance the substrate expects on any result a GUI
-produced without a live model: a \code{run_mode} column set to \code{"demo"}, a
-\code{demo_notice} column, and the \code{llmrshiny_demo_result} class that
+Marks a result produced without a live model: a \code{run_mode} column set to
+\code{"demo"}, a \code{demo_notice} column, and the \code{llmrshiny_demo_result} class that
 \code{\link[=is_demo_result]{is_demo_result()}} tests and \code{\link[=demo_banner_ui]{demo_banner_ui()}} announces. \code{\link[=demo_runner]{demo_runner()}}
-applies it automatically; call it directly for demo results built some
-other way.
+applies it automatically; call it directly for demonstration results built
+some other way.
 }
 \examples{
 annotate_demo_result(data.frame(response_text = "stub"))

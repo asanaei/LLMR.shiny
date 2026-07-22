@@ -1,7 +1,7 @@
 # runners.R --------------------------------------------------------------------
-# Runners. Demo mode is a deterministic offline stub returning LLMR-shaped
-# response columns with durable provenance. Live mode delegates experiments to
-# LLMR::call_llm_par through the same .runner contract.
+# Demonstration mode returns reproducible offline responses marked as
+# demonstrations. Live mode delegates request rows to LLMR::call_llm_par
+# through a replaceable function for live execution.
 
 #' Demo-result notice string
 #'
@@ -30,16 +30,17 @@ build_llm_config <- function(provider, model, ...) {
   )
 }
 
-#' A deterministic offline demo runner
+#' An offline demonstration response function
 #'
-#' Returns a function with the `.runner` contract `(experiments, ...)` that adds
-#' LLMR-shaped response columns. The per-row response text is decided by
-#' `responder`, a function `(text) -> character`. Results are marked as demo.
+#' Returns a function accepted by `.runner` arguments. It adds LLMR response
+#' columns to a request data frame. The per-row response text is decided by
+#' `responder`, a function `(text) -> character`. Results are marked as
+#' demonstrations.
 #'
 #' @param responder A function mapping a single input text to a response string.
 #'   Defaults to echoing a short stub.
 #' @param text_cols Candidate column names to read the input text from.
-#' @return A runner function of class `llmrshiny_demo_runner`.
+#' @return A response function of class `llmrshiny_demo_runner`.
 #' @export
 demo_runner <- function(responder = NULL,
                         text_cols = c("text", "unit", "document", "prompt", "input")) {
@@ -76,11 +77,11 @@ demo_runner <- function(responder = NULL,
   structure(runner, class = c("llmrshiny_demo_runner", "function"))
 }
 
-#' Build a runner for a mode
+#' Build an execution function for a mode
 #'
 #' @param mode `"demo"` or `"live"`.
-#' @param responder Optional demo responder (see [demo_runner()]).
-#' @return A callable experiments-frame runner.
+#' @param responder Optional demonstration responder (see [demo_runner()]).
+#' @return A callable function that accepts a request data frame.
 #' @export
 build_runner <- function(mode, responder = NULL) {
   # An unrecognized mode (a typo) must not silently fall through to the live,
@@ -112,17 +113,16 @@ build_runner <- function(mode, responder = NULL) {
   }
 }
 
-#' Mark a result frame as demo output
+#' Mark a result frame as demonstration output
 #'
-#' Stamps the demo provenance the substrate expects on any result a GUI
-#' produced without a live model: a `run_mode` column set to `"demo"`, a
-#' `demo_notice` column, and the `llmrshiny_demo_result` class that
+#' Marks a result produced without a live model: a `run_mode` column set to
+#' `"demo"`, a `demo_notice` column, and the `llmrshiny_demo_result` class that
 #' [is_demo_result()] tests and [demo_banner_ui()] announces. [demo_runner()]
-#' applies it automatically; call it directly for demo results built some
-#' other way.
+#' applies it automatically; call it directly for demonstration results built
+#' some other way.
 #'
 #' @param x A data frame of results.
-#' @return `x` with the two provenance columns and the demo class added.
+#' @return `x` with the two source columns and the demonstration class added.
 #' @examples
 #' annotate_demo_result(data.frame(response_text = "stub"))
 #' @export
@@ -134,16 +134,16 @@ annotate_demo_result <- function(x) {
   x
 }
 
-#' Is a result a demo result?
+#' Is a result a demonstration result?
 #' @param x A result object.
-#' @return `TRUE` when the result has demo class or provenance fields.
+#' @return `TRUE` when the result has the demonstration class or source fields.
 #' @export
 is_demo_result <- function(x) {
   inherits(x, "llmrshiny_demo_result") ||
     (is.list(x) && "run_mode" %in% names(x) && any(x$run_mode %in% "demo"))
 }
 
-#' @param x A demo result.
+#' @param x A demonstration result.
 #' @param ... Passed to the next print method.
 #' @rdname demo_runner
 #' @export
@@ -156,7 +156,7 @@ print.llmrshiny_demo_result <- function(x, ...) {
   invisible(x)
 }
 
-#' A banner announcing a demo result
+#' A banner announcing a demonstration result
 #' @return A warning card.
 #' @export
 demo_banner_ui <- function() {

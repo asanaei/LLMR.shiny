@@ -2,18 +2,18 @@
 % Please edit documentation in R/runners.R
 \name{build_runner}
 \alias{build_runner}
-\title{Build a runner for a mode}
+\title{Build an execution function for a mode}
 \usage{
 build_runner(mode, responder = NULL)
 }
 \arguments{
 \item{mode}{\code{"demo"} or \code{"live"}.}
 
-\item{responder}{Optional demo responder (see \code{\link[=demo_runner]{demo_runner()}}).}
+\item{responder}{Optional demonstration responder (see \code{\link[=demo_runner]{demo_runner()}}).}
 }
 \value{
-A callable experiments-frame runner.
+A callable function that accepts a request data frame.
 }
 \description{
-Build a runner for a mode
+Build an execution function for a mode
 }

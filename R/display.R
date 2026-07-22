@@ -1,8 +1,8 @@
 # display.R --------------------------------------------------------------------
-# The display layer over the shared LLMR generics, plus the standard sidebar and
-# the shared reactive context every GUI's server builds. These are what let a
-# new GUI be a thin module layer: it calls shell_sidebar() in the UI and
-# shell_context() in the server and gets keys, runner, and usage wiring for free.
+# Display helpers for results returned by the shared LLMR generics, plus the
+# standard sidebar, shared reactive values, and server helpers. A GUI calls
+# shell_sidebar() in the UI and shell_context() in the server to connect keys,
+# execution, and usage state.
 
 llmr_method_exists <- function(generic, x) {
   if (!pkg_available("LLMR")) return(FALSE)

@@ -1,7 +1,7 @@
 # keys.R -----------------------------------------------------------------------
 # Providers and their keys. Keys are read from environment variables only,
-# following the formula c("<PROVIDER>_API_KEY", "<PROVIDER>_KEY"). No GUI built
-# on this substrate ever accepts a pasted key or prints a key value.
+# following the formula c("<PROVIDER>_API_KEY", "<PROVIDER>_KEY"). These
+# components never accept a pasted key or print a key value.
 
 #' Provider registry
 #'

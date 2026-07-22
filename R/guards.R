@@ -64,8 +64,8 @@ condition_category <- function(e) {
 }
 
 # TRUE when the condition is an LLMR llmr_api_auth_error or its category
-# otherwise resolves to "auth". Implementation detail of llmr_error_banner();
-# the public classifier is condition_category().
+# otherwise resolves to "auth". This helper is used by llmr_error_banner();
+# the exported classifier is condition_category().
 is_auth_error <- function(e) {
   inherits(e, "llmr_api_auth_error") || identical(condition_category(e), "auth")
 }
@@ -82,7 +82,7 @@ llmr_error_banner <- function(e, provider = NULL) {
         class = "border-warning",
         bslib::card_header("Live run disabled"),
         bslib::card_body(
-          shiny::tags$p("No API key was available to the LLM runner."),
+          shiny::tags$p("No API key was available for live execution."),
           shiny::tags$p(
             paste0(
               "Set one of these in ~/.Renviron, restart R, and run the app again: ",

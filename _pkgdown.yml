@@ -13,11 +13,11 @@ navbar:
     left: [reference, articles, news]
     right: [github]
 reference:
-- title: Shell
+- title: Build an LLMR family GUI
   contents:
   - shell_sidebar
   - shell_context
-- title: Providers and keys
+- title: Providers, models, and credentials
   contents:
   - provider_registry
   - provider_choices
@@ -27,31 +27,8 @@ reference:
   - key_state
   - key_state_tile
   - live_run_blocker_ui
-- title: Runners and demo results
-  contents:
   - build_llm_config
-  - build_runner
-  - demo_runner
-  - demo_notice
-  - is_demo_result
-  - annotate_demo_result
-  - demo_banner_ui
-  - extract_token_counts
-- title: Session usage
-  contents:
-  - usage_empty
-  - usage_set_plan
-  - usage_add
-  - usage_tile
-- title: Display and errors
-  contents:
-  - report_text
-  - diagnostics_table
-  - as_display_table
-  - condition_category
-  - safe_llmr_call
-  - install_guidance_ui
-- title: Data input and mapping
+- title: Data input and column mapping
   contents:
   - read_csv_upload
   - read_csv_path
@@ -62,3 +39,26 @@ reference:
   contents:
   - persona_selector_ui
   - persona_selector_server
+- title: Results display and error handling
+  contents:
+  - report_text
+  - diagnostics_table
+  - as_display_table
+  - condition_category
+  - safe_llmr_call
+  - install_guidance_ui
+- title: Session usage and run planning
+  contents:
+  - usage_empty
+  - usage_set_plan
+  - usage_add
+  - usage_tile
+  - extract_token_counts
+- title: Live and demonstration execution
+  contents:
+  - build_runner
+  - demo_runner
+  - demo_notice
+  - is_demo_result
+  - annotate_demo_result
+  - demo_banner_ui

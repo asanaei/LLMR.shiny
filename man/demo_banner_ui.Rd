@@ -2,7 +2,7 @@
 % Please edit documentation in R/runners.R
 \name{demo_banner_ui}
 \alias{demo_banner_ui}
-\title{A banner announcing a demo result}
+\title{A banner announcing a demonstration result}
 \usage{
 demo_banner_ui()
 }
@@ -10,5 +10,5 @@ demo_banner_ui()
 A warning card.
 }
 \description{
-A banner announcing a demo result
+A banner announcing a demonstration result
 }

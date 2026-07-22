@@ -1,11 +1,11 @@
 Package: LLMR.shiny
-Title: Shared 'Shiny' Substrate for 'LLMR' Family GUIs
+Title: Shared 'Shiny' Components for 'LLMR' Family Applications
 Version: 0.1.2
 Authors@R:
     person("Ali", "Sanaei", , "sanaei@uchicago.edu", role = c("aut", "cre"))
-Description: The shell from which the 'LLMR' family's graphical
-    interfaces are assembled: provider and key handling, demo and live
-    runners, and shared display conventions.
+Description: Reusable 'Shiny' user interface and server components from
+    which the graphical applications in the 'LLMR' package family are
+    assembled.
 License: MIT + file LICENSE
 URL: https://github.com/asanaei/LLMR.shiny
 BugReports: https://github.com/asanaei/LLMR.shiny/issues
