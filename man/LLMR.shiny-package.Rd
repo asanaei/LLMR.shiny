@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-The shell from which the 'LLMR' family's graphical interfaces are assembled. Interface conventions are implemented once here, so a fix reaches every interface built on this package.
+The shell from which the 'LLMR' family's graphical interfaces are assembled: provider and key handling, demo and live runners, and shared display conventions.
 }
 \seealso{
 Useful links:

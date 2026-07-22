@@ -14,8 +14,9 @@ its own. The shell provides:
 
 - provider and model selection with overrideable model defaults
   (`provider_registry()`, `shell_sidebar()`)
-- environment-variable-only API key handling (`key_state()`, never a paste, never
-  a printed value)
+- API keys read only from environment variables and reported only as
+  present or absent (`key_state()`); the interface accepts no pasted key
+  and prints no key value
 - a deterministic offline demo runner with durable result provenance and a
   callable live runner (`demo_runner()`, `build_runner()`)
 - session usage accounting (`usage_empty()`, `usage_tile()`)

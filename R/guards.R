@@ -63,25 +63,17 @@ condition_category <- function(e) {
   e$category %||% attr(e, "category", exact = TRUE) %||% NA_character_
 }
 
-#' Is a caught condition an auth error?
-#'
-#' @param e A condition.
-#' @return `TRUE` when the condition is an LLMR `llmr_api_auth_error` or its
-#'   category otherwise resolves to `"auth"`.
-#' @export
+# TRUE when the condition is an LLMR llmr_api_auth_error or its category
+# otherwise resolves to "auth". Implementation detail of llmr_error_banner();
+# the public classifier is condition_category().
 is_auth_error <- function(e) {
   inherits(e, "llmr_api_auth_error") || identical(condition_category(e), "auth")
 }
 
-#' Map a caught LLM error to a banner card
-#'
-#' An auth failure becomes a key-state banner naming the environment variables
-#' to set; any other error shows its message verbatim. Neither crashes the app.
-#'
-#' @param e A caught condition.
-#' @param provider Optional provider id, for the key banner.
-#' @return A `bslib::card`.
-#' @export
+# Map a caught LLM error to a banner card: an auth failure becomes a
+# key-state banner naming the environment variables to set; any other error
+# shows its message verbatim. Used only inside safe_llmr_call(), whose result
+# carries the card.
 llmr_error_banner <- function(e, provider = NULL) {
   if (is_auth_error(e)) {
     ks <- key_state(provider %||% "groq")

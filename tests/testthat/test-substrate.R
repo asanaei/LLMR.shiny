@@ -252,15 +252,15 @@ test_that("LLMR classed conditions are recognized by class, not a field", {
   expect_identical(condition_category(cond_of("auth")), "auth")
   expect_identical(condition_category(cond_of("rate_limit")), "rate_limit")
   expect_identical(condition_category(cond_of("param")), "param")
-  expect_true(is_auth_error(cond_of("auth")))
-  expect_false(is_auth_error(cond_of("server")))
+  expect_true(LLMR.shiny:::is_auth_error(cond_of("auth")))
+  expect_false(LLMR.shiny:::is_auth_error(cond_of("server")))
   # a plain condition still resolves to NA / not-auth
   plain <- simpleError("boom")
   expect_identical(condition_category(plain), NA_character_)
-  expect_false(is_auth_error(plain))
+  expect_false(LLMR.shiny:::is_auth_error(plain))
   # the field fallback still works for foreign conditions
   foreign <- simpleError("boom"); foreign$category <- "auth"
-  expect_true(is_auth_error(foreign))
+  expect_true(LLMR.shiny:::is_auth_error(foreign))
 })
 
 test_that("an auth error becomes the key banner through safe_llmr_call", {

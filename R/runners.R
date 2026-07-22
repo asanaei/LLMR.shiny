@@ -112,6 +112,20 @@ build_runner <- function(mode, responder = NULL) {
   }
 }
 
+#' Mark a result frame as demo output
+#'
+#' Stamps the demo provenance the substrate expects on any result a GUI
+#' produced without a live model: a `run_mode` column set to `"demo"`, a
+#' `demo_notice` column, and the `llmrshiny_demo_result` class that
+#' [is_demo_result()] tests and [demo_banner_ui()] announces. [demo_runner()]
+#' applies it automatically; call it directly for demo results built some
+#' other way.
+#'
+#' @param x A data frame of results.
+#' @return `x` with the two provenance columns and the demo class added.
+#' @examples
+#' annotate_demo_result(data.frame(response_text = "stub"))
+#' @export
 annotate_demo_result <- function(x) {
   n <- NROW(x)
   x$run_mode <- rep("demo", n)

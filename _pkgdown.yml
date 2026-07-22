@@ -34,6 +34,7 @@ reference:
   - demo_runner
   - demo_notice
   - is_demo_result
+  - annotate_demo_result
   - demo_banner_ui
   - extract_token_counts
 - title: Session usage
@@ -48,8 +49,6 @@ reference:
   - diagnostics_table
   - as_display_table
   - condition_category
-  - is_auth_error
-  - llmr_error_banner
   - safe_llmr_call
   - install_guidance_ui
 - title: Data input and mapping
