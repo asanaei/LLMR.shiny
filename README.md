@@ -176,3 +176,28 @@ configuration construction require it:
 ```r
 install.packages("LLMR")
 ```
+
+## Related packages
+
+LLMR.shiny provides the shared Shiny components used by the graphical
+interfaces in the LLMR family. [LLMR](https://asanaei.github.io/LLMR/) is the
+common provider interface on CRAN.
+[LLMRcontent](https://asanaei.github.io/LLMRcontent/) codes text with codebooks
+and builds replication archives.
+[LLMRpanel](https://asanaei.github.io/LLMRpanel/) administers survey and
+experimental instruments to panels of model personas.
+[FocusGroup](https://asanaei.github.io/FocusGroup/) runs moderated group
+discussions. [LLMRagent](https://asanaei.github.io/LLMRagent/) provides tools
+for agent experiments. The
+[ecosystem page](https://asanaei.github.io/LLMR-ecosystem/) describes the
+package boundaries.
+
+## Contributing
+
+Report bugs and feature requests in the
+[GitHub repository](https://github.com/asanaei/LLMR.shiny). Pull requests may
+be submitted there.
+
+## License
+
+This project uses the MIT License; see `LICENSE`.
