@@ -15,6 +15,7 @@ navbar:
 reference:
 - title: Build an LLMR family GUI
   contents:
+  - llmr_theme
   - shell_sidebar
   - shell_context
 - title: Providers, models, and credentials

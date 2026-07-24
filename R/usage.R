@@ -49,24 +49,39 @@ usage_add <- function(state, tokens) {
 #' @export
 usage_tile <- function(state) {
   state <- state %||% usage_empty()
+  calls <- as.integer(state$calls %||% 0L)
+  result_rows <- as.integer(state$result_rows %||% 0L)
   realized <- c(
-    if (state$calls > 0L) paste(state$calls, "calls"),
-    if (state$result_rows > 0L) paste(state$result_rows, "result rows")
+    paste(calls, if (identical(calls, 1L)) "call" else "calls"),
+    if (result_rows > 0L) {
+      paste(
+        result_rows,
+        if (identical(result_rows, 1L)) "result row" else "result rows"
+      )
+    }
   )
-  if (length(realized) == 0L) realized <- "0 calls"
 
   planned <- as.integer(state$planned_calls %||% 0L)
   planned_line <- if (!is.na(planned) && planned > 0L) {
-    shiny::tags$p(paste0(state$planned_label %||% "Planned next run", ": ",
-                         planned, " calls"))
+    label <- sub("[.]+$", "", state$planned_label %||% "Next run")
+    shiny::tags$p(
+      paste0(
+        planned, " planned ",
+        if (identical(planned, 1L)) "call" else "calls",
+        ". ", label, "."
+      )
+    )
   } else {
     shiny::tags$p("No pending run")
   }
   bslib::value_box(
     title = "Session usage",
     value = paste(realized, collapse = " | "),
-    showcase = shiny::tags$span("Tokens"),
-    shiny::tags$p(paste0("Sent: ", state$sent, " | Received: ", state$received)),
+    showcase = shiny::tags$span("Usage"),
+    shiny::tags$p(
+      paste0("Sent ", state$sent, " / Received ", state$received, " tokens")
+    ),
+    shiny::tags$p(class = "small text-body-secondary", "Calls are API requests."),
     planned_line
   )
 }

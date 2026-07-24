@@ -41,24 +41,40 @@ diagnostics_table <- function(x, ...) {
   as_display_table(out)
 }
 
-#' The standard GUI sidebar: provider, model, mode, key tile, usage tile
+#' The standard GUI sidebar: mode, live configuration, and usage
 #'
 #' @param id The module namespace (or `NULL` for top-level inputs).
 #' @param default_provider Provider selected initially.
 #' @return A `bslib::sidebar`.
 #' @export
 shell_sidebar <- function(id = NULL, default_provider = "groq") {
-  ns <- if (is.null(id)) identity else shiny::NS(id)
+  ns <- shiny::NS(id)
   bslib::sidebar(
     width = 330,
-    shiny::selectInput(ns("provider"), "Provider",
-                       choices = provider_choices(), selected = default_provider),
-    shiny::textInput(ns("model"), "Model",
-                     value = provider_default_model(default_provider)),
     shiny::radioButtons(ns("run_mode"), "Mode",
                         choices = c("Demo" = "demo", "Live" = "live"),
                         selected = "demo", inline = TRUE),
-    shiny::uiOutput(ns("key_state_tile")),
+    shiny::conditionalPanel(
+      condition = "input.run_mode === 'demo'",
+      shiny::tags$p(
+        class = "text-body-secondary small",
+        "Bundled deterministic demo. No model, API key, or API calls."
+      ),
+      ns = ns
+    ),
+    shiny::conditionalPanel(
+      condition = "input.run_mode === 'live'",
+      shiny::selectInput(
+        ns("provider"), "Provider",
+        choices = provider_choices(), selected = default_provider
+      ),
+      shiny::textInput(
+        ns("model"), "Model",
+        value = provider_default_model(default_provider)
+      ),
+      shiny::uiOutput(ns("key_state_tile")),
+      ns = ns
+    ),
     shiny::uiOutput(ns("usage_tile"))
   )
 }

@@ -109,6 +109,11 @@ test_that("usage accounting accumulates realized and planned usage", {
   s <- usage_empty()
   s <- usage_set_plan(s, 10, "tuning")
   expect_equal(s$planned_calls, 10L)
+  planned_text <- paste(as.character(usage_tile(s)), collapse = " ")
+  expect_match(planned_text, "10 planned calls", fixed = TRUE)
+  expect_match(planned_text, "Sent 0 / Received 0 tokens", fixed = TRUE)
+  expect_match(planned_text, "Calls are API requests.", fixed = TRUE)
+  expect_match(planned_text, "Usage", fixed = TRUE)
   s <- usage_add(s, list(calls = 3, sent = 100, received = 50, total = 150))
   expect_equal(s$calls, 3L)
   expect_equal(s$total, 150L)
@@ -116,6 +121,25 @@ test_that("usage accounting accumulates realized and planned usage", {
 
   s <- usage_add(s, list(result_rows = 2, sent = 0, received = 0, total = 0))
   expect_equal(s$result_rows, 2L)
+})
+
+test_that("the shared sidebar presents Demo as a complete state", {
+  html <- paste(as.character(shell_sidebar()), collapse = " ")
+  expect_lt(regexpr("Mode", html, fixed = TRUE),
+            regexpr("Provider", html, fixed = TRUE))
+  expect_match(
+    html,
+    "Bundled deterministic demo. No model, API key, or API calls.",
+    fixed = TRUE
+  )
+  expect_match(html, "input.run_mode === 'live'", fixed = TRUE)
+})
+
+test_that("studio themes share the family palette", {
+  themes <- lapply(c("content", "panel", "focus"), llmr_theme)
+  expect_true(all(vapply(themes, inherits, logical(1), "sass_bundle")))
+  expect_error(llmr_theme("other"), "arg")
+  expect_error(llmr_theme("content", primary = "red"), "fixes")
 })
 
 test_that("token counts use explicit call provenance", {
@@ -324,7 +348,7 @@ test_that("demo runner survives a zero-row frame and NA input text", {
 test_that("usage tile shows the planned line only for a pending run", {
   s <- usage_set_plan(usage_empty(), 10, "tuning")
   txt <- paste(as.character(usage_tile(s)), collapse = " ")
-  expect_match(txt, "tuning: 10 calls")
+  expect_match(txt, "10 planned calls. tuning.", fixed = TRUE)
 
   s <- usage_add(s, list(calls = 10, sent = 40, received = 20, total = 60))
   txt2 <- paste(as.character(usage_tile(s)), collapse = " ")
