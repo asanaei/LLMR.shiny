@@ -10,7 +10,7 @@ provider_default_model(provider)
 \item{provider}{Provider id.}
 }
 \value{
-The default model string, or \code{""}.
+The default model string, or \code{""} for an unknown provider.
 }
 \description{
 Default model for a provider

@@ -13,6 +13,57 @@ llmr_method_exists <- function(generic, x) {
   }, logical(1)))
 }
 
+#' Output container for long text results
+#'
+#' @param id Output id passed to [shiny::verbatimTextOutput()].
+#' @param height CSS height of the scrollable container.
+#' @return A bordered, scrollable Shiny output container.
+#' @export
+#' @examples
+#' text_block_output("report")
+text_block_output <- function(id, height = "18rem") {
+  output <- shiny::tagAppendAttributes(
+    shiny::verbatimTextOutput(id),
+    style = paste(
+      "min-height: 100%; max-height: none; overflow: visible;",
+      "margin: 0; flex: 0 0 auto;"
+    )
+  )
+  shiny::tags$div(
+    class = "llmr-text-block border rounded p-3 bg-body-tertiary",
+    style = paste0(
+      "height: ", shiny::validateCssUnit(height),
+      "; overflow: auto; flex: 0 0 auto;"
+    ),
+    output
+  )
+}
+
+#' Inline help tooltip
+#'
+#' @param text Help text shown by the tooltip and exposed to assistive
+#'   technology.
+#' @param placement Tooltip placement relative to the icon.
+#' @return A focusable information icon wrapped in a `bslib` tooltip.
+#' @export
+#' @examples
+#' shiny::tags$label(
+#'   "Turn-taking flow",
+#'   help_tip("How the next speaker is chosen.")
+#' )
+help_tip <- function(text, placement = "right") {
+  trigger <- shiny::icon(
+    "circle-info",
+    class = "small text-body-secondary llmr-help-tip"
+  )
+  trigger$attribs$role <- "img"
+  trigger$attribs[["aria-label"]] <- text
+  trigger$attribs$title <- text
+  trigger$attribs$tabindex <- "0"
+
+  bslib::tooltip(trigger, text, placement = placement)
+}
+
 #' Render an object's `report()` prose, falling back to print output
 #'
 #' @param x A result object with an `LLMR::report()` method, or any object.
@@ -49,6 +100,22 @@ diagnostics_table <- function(x, ...) {
 #' @export
 shell_sidebar <- function(id = NULL, default_provider = "groq") {
   ns <- shiny::NS(id)
+  max_tokens_input <- shiny::numericInput(
+    ns("max_tokens"),
+    shiny::tagList(
+      "Max output tokens ",
+      help_tip("Leave blank to use the model default.")
+    ),
+    value = NULL,
+    min = 1,
+    step = 1
+  )
+  max_tokens_input <- shiny::tagAppendAttributes(
+    max_tokens_input,
+    placeholder = "Model default",
+    .cssSelector = "input"
+  )
+
   bslib::sidebar(
     width = 330,
     shiny::radioButtons(ns("run_mode"), "Mode",
@@ -69,10 +136,47 @@ shell_sidebar <- function(id = NULL, default_provider = "groq") {
         choices = provider_choices(), selected = default_provider
       ),
       shiny::textInput(
-        ns("model"), "Model",
-        value = provider_default_model(default_provider)
+        ns("model"),
+        shiny::tagList(
+          "Model ",
+          help_tip("Use the provider's own model id.")
+        ),
+        value = provider_default_model(default_provider),
+        placeholder = "Model id from the selected provider"
       ),
       shiny::uiOutput(ns("key_state_tile")),
+      bslib::accordion(
+        bslib::accordion_panel(
+          "Generation settings",
+          shiny::numericInput(
+            ns("temperature"),
+            shiny::tagList(
+              "Temperature ",
+              help_tip("Higher values give more variable wording.")
+            ),
+            value = 0.7,
+            min = 0,
+            max = 2,
+            step = 0.1
+          ),
+          max_tokens_input,
+          shiny::selectInput(
+            ns("reasoning_effort"),
+            shiny::tagList(
+              "Reasoning effort ",
+              help_tip("Support depends on the provider and model.")
+            ),
+            choices = c(
+              "Model default" = "",
+              "Low" = "low",
+              "Medium" = "medium",
+              "High" = "high"
+            ),
+            selected = ""
+          )
+        ),
+        open = FALSE
+      ),
       ns = ns
     ),
     shiny::uiOutput(ns("usage_tile"))
@@ -84,8 +188,9 @@ shell_sidebar <- function(id = NULL, default_provider = "groq") {
 #' Call once at the top of a GUI's server with the top-level `input`, `output`,
 #' `session`. It keeps the model field in sync with the provider, renders the
 #' key and usage tiles, tracks usage, and returns a list of reactives and
-#' mutators (`provider`, `model`, `mode`, `key`, `can_run`, `set_plan`,
-#' `add_usage`) for the per-package modules to consume.
+#' mutators (`provider`, `model`, `mode`, `temperature`, `max_tokens`,
+#' `reasoning_effort`, `key`, `can_run`, `set_plan`, `add_usage`) for the
+#' per-package modules to consume.
 #'
 #' @param input,output,session The top-level Shiny server arguments.
 #' @return A shared-context list.
@@ -105,6 +210,9 @@ shell_context <- function(input, output, session) {
     provider = shiny::reactive(input$provider),
     model = shiny::reactive(input$model),
     mode = shiny::reactive(input$run_mode),
+    temperature = shiny::reactive(input$temperature),
+    max_tokens = shiny::reactive(input$max_tokens),
+    reasoning_effort = shiny::reactive(input$reasoning_effort),
     key = shiny::reactive(key_state(input$provider)),
     can_run = shiny::reactive({
       identical(input$run_mode, "demo") || isTRUE(key_state(input$provider)$found)

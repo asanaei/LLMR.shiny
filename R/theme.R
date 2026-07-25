@@ -64,6 +64,10 @@ llmr_theme <- function(studio = c("content", "panel", "focus"), ...) {
       "}",
       ".navbar-nav .nav-link.active, .nav-tabs .nav-link.active {",
       "box-shadow: inset 0 -3px 0 ", accent, ";",
+      "}",
+      "pre, .shiny-text-output {",
+      "min-height: 8rem; max-height: 32rem; overflow: auto;",
+      "flex: 0 0 auto;",
       "}"
     )
   )

@@ -1,5 +1,13 @@
 # LLMR.shiny 0.1.2
 
+* Added `text_block_output()` and defensive theme rules for long text results
+  inside fillable layouts.
+* Added accessible `help_tip()` icons for compact, inline guidance.
+* Added live generation settings for temperature, maximum output tokens, and
+  reasoning effort, with unset model parameters omitted from
+  `build_llm_config()`.
+* Added active default models, Gemini support, and model-entry guidance to the
+  shared sidebar.
 * `build_runner("live")` returns a callable function, and `report_text()`
   propagates the report generic's output.
 * Demonstration results carry explicit source fields (`annotate_demo_result()`,

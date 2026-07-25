@@ -15,7 +15,12 @@ provider_registry(
 A data frame of \code{provider}, \code{display}, and \code{default_model}.
 }
 \description{
-Model defaults are optional because provider aliases can change between
-package releases. Set the \code{LLMR.shiny.default_models} option to a named
-character vector to supply local defaults.
+The registry supplies a working default model for each provider. Set the
+\code{LLMR.shiny.default_models} option to a named character vector to replace
+selected defaults without changing the others.
+}
+\details{
+Built-in defaults are \verb{openai/gpt-oss-20b} for Groq and Together,
+\verb{gpt-4o-mini} for OpenAI, \code{claude-haiku-4-5} for Anthropic,
+\code{deepseek-v4-flash} for DeepSeek, and \code{gemini-3.1-flash-lite} for Gemini.
 }

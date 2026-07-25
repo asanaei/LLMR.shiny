@@ -14,19 +14,38 @@ demo_notice <- function() {
 #' Build an LLM config
 #'
 #' @param provider,model Provider and model ids.
-#' @param ... Passed to [LLMR::llm_config()] (e.g. `temperature`).
+#' @param ... Other arguments passed to [LLMR::llm_config()].
+#' @param temperature Sampling temperature, or `NULL` to use the model default.
+#' @param max_tokens Maximum output tokens, or `NULL`, `NA`, or `""` to use the
+#'   model default.
+#' @param reasoning_effort Reasoning effort (`"low"`, `"medium"`, or `"high"`),
+#'   or `NULL` or `""` to use the model default.
 #' @return An `LLMR::llm_config`.
 #' @export
-build_llm_config <- function(provider, model, ...) {
+build_llm_config <- function(provider, model, ..., temperature = NULL,
+                             max_tokens = NULL, reasoning_effort = NULL) {
   if (!pkg_available("LLMR")) {
     stop(
       "Package 'LLMR' is required to build a live config. Install it with install.packages(\"LLMR\").",
       call. = FALSE
     )
   }
+  model_params <- list(...)
+  if (length(temperature) == 1L && !is.na(temperature) &&
+      (!is.character(temperature) || nzchar(trimws(temperature)))) {
+    model_params$temperature <- temperature
+  }
+  if (length(max_tokens) == 1L && !is.na(max_tokens) &&
+      (!is.character(max_tokens) || nzchar(trimws(max_tokens)))) {
+    model_params$max_tokens <- max_tokens
+  }
+  if (length(reasoning_effort) == 1L && !is.na(reasoning_effort) &&
+      nzchar(trimws(reasoning_effort))) {
+    model_params$reasoning_effort <- reasoning_effort
+  }
   do.call(
     LLMR::llm_config,
-    c(list(provider = provider, model = model), list(...))
+    c(list(provider = provider, model = model), model_params)
   )
 }
 

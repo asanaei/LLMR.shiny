@@ -16,6 +16,7 @@ A shared-context list.
 Call once at the top of a GUI's server with the top-level \code{input}, \code{output},
 \code{session}. It keeps the model field in sync with the provider, renders the
 key and usage tiles, tracks usage, and returns a list of reactives and
-mutators (\code{provider}, \code{model}, \code{mode}, \code{key}, \code{can_run}, \code{set_plan},
-\code{add_usage}) for the per-package modules to consume.
+mutators (\code{provider}, \code{model}, \code{mode}, \code{temperature}, \code{max_tokens},
+\code{reasoning_effort}, \code{key}, \code{can_run}, \code{set_plan}, \code{add_usage}) for the
+per-package modules to consume.
 }

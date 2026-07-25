@@ -18,6 +18,7 @@ reference:
   - llmr_theme
   - shell_sidebar
   - shell_context
+  - help_tip
 - title: Providers, models, and credentials
   contents:
   - provider_registry
@@ -43,6 +44,7 @@ reference:
 - title: Results display and error handling
   contents:
   - report_text
+  - text_block_output
   - diagnostics_table
   - as_display_table
   - condition_category

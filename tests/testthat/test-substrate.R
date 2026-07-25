@@ -20,10 +20,20 @@ test_that("key_state reads env vars and never exposes the key value", {
   expect_false(grepl("super-secret", txt, fixed = TRUE))
 })
 
-test_that("provider model defaults are optional and overrideable", {
+test_that("provider model defaults are populated and overrideable", {
   withr::local_options(LLMR.shiny.default_models = NULL)
   reg <- provider_registry()
-  expect_true(all(reg$default_model == ""))
+  expect_equal(
+    reg$default_model,
+    c(
+      "openai/gpt-oss-20b",
+      "gpt-4o-mini",
+      "claude-haiku-4-5",
+      "openai/gpt-oss-20b",
+      "deepseek-v4-flash",
+      "gemini-3.1-flash-lite"
+    )
+  )
   expect_equal(provider_display_name("openai"), "OpenAI")
   ch <- provider_choices()
   expect_equal(unname(ch), reg$provider)
@@ -33,7 +43,7 @@ test_that("provider model defaults are optional and overrideable", {
     LLMR.shiny.default_models = c(groq = "test-model")
   )
   expect_identical(provider_default_model("groq"), "test-model")
-  expect_identical(provider_default_model("openai"), "")
+  expect_identical(provider_default_model("openai"), "gpt-4o-mini")
 })
 
 test_that("demo runner returns marked LLMR-shaped results", {
@@ -133,6 +143,14 @@ test_that("the shared sidebar presents Demo as a complete state", {
     fixed = TRUE
   )
   expect_match(html, "input.run_mode === 'live'", fixed = TRUE)
+  expect_match(html, "Generation settings", fixed = TRUE)
+  expect_match(html, "accordion-button collapsed", fixed = TRUE)
+  expect_match(
+    html,
+    'placeholder = "Model id from the selected provider"',
+    fixed = TRUE
+  )
+  expect_match(html, 'placeholder = "Model default"', fixed = TRUE)
 })
 
 test_that("studio themes share the family palette", {
@@ -140,6 +158,24 @@ test_that("studio themes share the family palette", {
   expect_true(all(vapply(themes, inherits, logical(1), "sass_bundle")))
   expect_error(llmr_theme("other"), "arg")
   expect_error(llmr_theme("content", primary = "red"), "fixes")
+})
+
+test_that("studio themes prevent text outputs from collapsing", {
+  theme <- llmr_theme("content")
+  rules <- paste(
+    unlist(
+      lapply(theme$layers, function(layer) layer$rules),
+      recursive = TRUE,
+      use.names = FALSE
+    ),
+    collapse = "\n"
+  )
+
+  expect_match(rules, "pre, .shiny-text-output", fixed = TRUE)
+  expect_match(rules, "min-height: 8rem", fixed = TRUE)
+  expect_match(rules, "max-height: 32rem", fixed = TRUE)
+  expect_match(rules, "overflow: auto", fixed = TRUE)
+  expect_match(rules, "flex: 0 0 auto", fixed = TRUE)
 })
 
 test_that("token counts use explicit call provenance", {
@@ -238,9 +274,48 @@ test_that("an unknown provider falls back to empty string / provider id, not NA"
 test_that("build_llm_config returns an LLMR config", {
   skip_if_not_installed("LLMR")
   withr::local_envvar(GROQ_API_KEY = "test-key-not-real")
-  config <- build_llm_config("groq", "test-model", temperature = 0)
+  config <- build_llm_config(
+    "groq",
+    "test-model",
+    temperature = 0.7,
+    max_tokens = 512,
+    reasoning_effort = "high"
+  )
   expect_s3_class(config, "llm_config")
   expect_false(inherits(config, "llmrshiny_config"))
+  expect_equal(
+    config$model_params,
+    list(temperature = 0.7, max_tokens = 512, reasoning_effort = "high")
+  )
+})
+
+test_that("build_llm_config omits generation settings left at default", {
+  skip_if_not_installed("LLMR")
+  config <- build_llm_config(
+    "groq",
+    "test-model",
+    temperature = NULL,
+    max_tokens = NA_real_,
+    reasoning_effort = ""
+  )
+  expect_identical(config$model_params, list())
+
+  blank <- build_llm_config(
+    "groq",
+    "test-model",
+    max_tokens = "",
+    reasoning_effort = ""
+  )
+  expect_false("max_tokens" %in% names(blank$model_params))
+
+  compatible <- build_llm_config(
+    "groq",
+    "test-model",
+    troubleshooting = TRUE,
+    top_p = 0.8
+  )
+  expect_true(compatible$troubleshooting)
+  expect_equal(compatible$model_params, list(top_p = 0.8))
 })
 
 test_that("build_llm_config requires LLMR with actionable guidance", {
