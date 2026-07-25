@@ -100,17 +100,58 @@ map_columns <- function(data, text_col, label_col = NULL, keep_original = TRUE) 
 #' @param x Any object.
 #' @param max_rows Row cap for the display.
 #' @param component For a list, the name of the component to display.
+#' @param digits Number of significant digits used for ordinary double columns.
+#'   Integer, identifier, and nonnumeric columns are not changed.
 #' @return A data frame.
 #' @export
-as_display_table <- function(x, max_rows = 500L, component = NULL) {
-  if (is.data.frame(x)) return(utils::head(as.data.frame(x), max_rows))
-  if (is.matrix(x)) return(utils::head(as.data.frame(x), max_rows))
+#' @examples
+#' x <- data.frame(
+#'   item_id = c(1000001, 1000002),
+#'   share = c(0.123456, 0.987654),
+#'   count = c(3L, 7L)
+#' )
+#' as_display_table(x)
+as_display_table <- function(x, max_rows = 500L, component = NULL, digits = 3L) {
+  if (length(digits) != 1L || !is.numeric(digits) || is.na(digits) ||
+      !is.finite(digits) || digits < 1 || digits != as.integer(digits)) {
+    stop("`digits` must be one positive whole number.", call. = FALSE)
+  }
+
+  prepare <- function(value) {
+    out <- utils::head(as.data.frame(value), max_rows)
+    column_names <- names(out)
+    is_id <- grepl(
+      "(^ids?$|(^|[._])(ids?|uuids?|guids?)$|identifier)",
+      column_names,
+      ignore.case = TRUE
+    ) | grepl("(Id|ID|Uuid|UUID|Guid|GUID)s?$", column_names)
+    # Counts are often stored as doubles; rounding them to significant digits
+    # would misreport them (123456 words as 123000), so only columns that
+    # actually carry fractions are rounded.
+    roundable <- vapply(
+      out,
+      function(column) {
+        is.double(column) && is.null(attr(column, "class")) &&
+          any(is.finite(column) & column != round(column))
+      },
+      logical(1)
+    ) & !is_id
+    out[roundable] <- lapply(out[roundable], signif, digits = as.integer(digits))
+    out
+  }
+
+  if (is.data.frame(x)) return(prepare(x))
+  if (is.matrix(x)) return(prepare(x))
   if (is.list(x)) {
     if (length(component) != 1L || !is.character(component) ||
         !component %in% names(x)) {
       stop("`component` must name one component of a list result.", call. = FALSE)
     }
-    return(as_display_table(x[[component]], max_rows = max_rows))
+    return(as_display_table(
+      x[[component]],
+      max_rows = max_rows,
+      digits = digits
+    ))
   }
   data.frame(
     output = paste(utils::capture.output(utils::str(x, max.level = 2)), collapse = "\n"),

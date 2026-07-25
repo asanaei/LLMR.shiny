@@ -32,10 +32,11 @@ the module renders nothing and the reactive is always \code{integer(0)},
 matching the install guidance shown by \code{\link[=persona_selector_ui]{persona_selector_ui()}}.
 }
 \description{
-Renders a compact overview of \code{data} as a multi-select table and returns the
-selected row indices (relative to \code{data}) as a reactive. When \code{data} carries
-the persona contract (see \code{\link[LLMR:llm_persona_overview]{LLMR::llm_persona_overview()}}), the overview columns
-are chosen automatically; otherwise the first few columns are shown.
+Renders a compact overview of \code{data} as a multi-select table, reports the
+live selected-row count, and returns the selected row indices (relative to
+\code{data}) as a reactive. When \code{data} carries the persona contract (see
+\code{\link[LLMR:llm_persona_overview]{LLMR::llm_persona_overview()}}), the overview columns are chosen
+automatically; otherwise the first few columns are shown.
 }
 \seealso{
 \code{\link[=persona_selector_ui]{persona_selector_ui()}}.

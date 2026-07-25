@@ -10,7 +10,7 @@ persona_selector_ui(id)
 \item{id}{Module id.}
 }
 \value{
-A Shiny UI element (a \code{DT} output).
+Shiny UI elements for a live selection count and a \code{DT} output.
 }
 \description{
 Renders the selectable persona table. Pair with \code{\link[=persona_selector_server]{persona_selector_server()}}.

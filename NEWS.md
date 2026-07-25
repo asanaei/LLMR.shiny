@@ -1,5 +1,10 @@
 # LLMR.shiny 0.1.2
 
+* Persona selectors now report the live selected-row count and explain the
+  seeded-sample behavior when no rows are selected.
+* `as_display_table()` now rounds ordinary double columns to three significant
+  digits for display, with a `digits` override, while preserving integer,
+  identifier, and nonnumeric columns.
 * Added `text_block_output()` and defensive theme rules for long text results
   inside fillable layouts.
 * Added accessible `help_tip()` icons for compact, inline guidance.

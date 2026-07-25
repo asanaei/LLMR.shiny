@@ -115,6 +115,34 @@ test_that("column mapping validates and maps, one row per input row", {
   expect_error(validate_column_mapping(df, "missing"), "text column")
 })
 
+test_that("display tables round only ordinary double columns", {
+  original <- data.frame(
+    message_id = c(1000000.123, 1000001.987),
+    respondentId = c(2000000.123, 2000001.987),
+    share = c(0.123456, 0.987654),
+    seconds = c(1.23456, 9.87654),
+    count = c(3L, 7L),
+    label = c("a", "b"),
+    stringsAsFactors = FALSE
+  )
+  shown <- as_display_table(original)
+
+  expect_identical(shown$message_id, original$message_id)
+  expect_identical(shown$respondentId, original$respondentId)
+  expect_equal(shown$share, c(0.123, 0.988))
+  expect_equal(shown$seconds, c(1.23, 9.88))
+  expect_identical(shown$count, original$count)
+  expect_identical(shown$label, original$label)
+  expect_equal(original$share, c(0.123456, 0.987654))
+
+  fewer <- as_display_table(original, digits = 2L)
+  expect_equal(fewer$share, c(0.12, 0.99))
+  expect_error(as_display_table(original, digits = 0L), "positive whole")
+
+  nested <- as_display_table(list(results = original), component = "results")
+  expect_equal(nested$share, shown$share)
+})
+
 test_that("usage accounting accumulates realized and planned usage", {
   s <- usage_empty()
   s <- usage_set_plan(s, 10, "tuning")
