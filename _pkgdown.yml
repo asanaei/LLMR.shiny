@@ -35,6 +35,7 @@ reference:
   - read_csv_upload
   - read_csv_path
   - column_names_for_mapping
+  - guess_column
   - validate_column_mapping
   - map_columns
 - title: Persona selection

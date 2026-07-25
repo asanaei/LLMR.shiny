@@ -32,6 +32,23 @@ test_that("help_tip is focusable and exposes its text accessibly", {
   expect_no_match(html, 'role="presentation"', fixed = TRUE)
 })
 
+test_that("the shared theme keeps validation messages in normal flow", {
+  theme <- llmr_theme("content")
+  rules <- paste(
+    unlist(lapply(theme$layers, function(layer) layer$rules)),
+    collapse = "\n"
+  )
+
+  expect_match(
+    rules,
+    ".shiny-output-error-validation",
+    fixed = TRUE
+  )
+  expect_match(rules, "position: static !important", fixed = TRUE)
+  expect_match(rules, "height: auto !important", fixed = TRUE)
+  expect_match(rules, "min-height: 1.5em", fixed = TRUE)
+})
+
 test_that("shell_context exposes generation settings as reactives", {
   context <- NULL
   shiny::testServer(function(input, output, session) {

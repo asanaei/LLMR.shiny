@@ -179,6 +179,16 @@ test_that("the shared sidebar presents Demo as a complete state", {
     fixed = TRUE
   )
   expect_match(html, 'placeholder = "Model default"', fixed = TRUE)
+
+  custom <- paste(
+    as.character(shell_sidebar(
+      max_tokens_help = "Leave blank to use 512.",
+      max_tokens_placeholder = "Package default: 512"
+    )),
+    collapse = " "
+  )
+  expect_match(custom, "Leave blank to use 512.", fixed = TRUE)
+  expect_match(custom, 'placeholder = "Package default: 512"', fixed = TRUE)
 })
 
 test_that("studio themes share the family palette", {

@@ -96,15 +96,20 @@ diagnostics_table <- function(x, ...) {
 #'
 #' @param id The module namespace (or `NULL` for top-level inputs).
 #' @param default_provider Provider selected initially.
+#' @param max_tokens_help Help text for a blank maximum-output-token field.
+#' @param max_tokens_placeholder Placeholder for the maximum-output-token field.
 #' @return A `bslib::sidebar`.
 #' @export
-shell_sidebar <- function(id = NULL, default_provider = "groq") {
+shell_sidebar <- function(
+    id = NULL, default_provider = "groq",
+    max_tokens_help = "Leave blank to use the model default.",
+    max_tokens_placeholder = "Model default") {
   ns <- shiny::NS(id)
   max_tokens_input <- shiny::numericInput(
     ns("max_tokens"),
     shiny::tagList(
       "Max output tokens ",
-      help_tip("Leave blank to use the model default.")
+      help_tip(max_tokens_help)
     ),
     value = NULL,
     min = 1,
@@ -112,7 +117,7 @@ shell_sidebar <- function(id = NULL, default_provider = "groq") {
   )
   max_tokens_input <- shiny::tagAppendAttributes(
     max_tokens_input,
-    placeholder = "Model default",
+    placeholder = max_tokens_placeholder,
     .cssSelector = "input"
   )
 

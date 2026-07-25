@@ -68,6 +68,14 @@ llmr_theme <- function(studio = c("content", "panel", "focus"), ...) {
       "pre, .shiny-text-output {",
       "min-height: 8rem; max-height: 32rem; overflow: auto;",
       "flex: 0 0 auto;",
+      "}",
+      ".shiny-output-error-validation {",
+      "position: static !important;",
+      "display: block !important;",
+      "height: auto !important;",
+      "min-height: 1.5em;",
+      "margin: .25rem 0 .9rem;",
+      "overflow: visible;",
       "}"
     )
   )

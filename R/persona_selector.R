@@ -46,6 +46,8 @@ persona_selector_ui <- function(id) {
 #'   available, else the first columns of `data`.
 #' @param page_length Rows per page in the table. Default `8`.
 #' @param height CSS height for the scrollable table body. Default `"260px"`.
+#' @param empty_selection_note Optional text appended to the count when no rows
+#'   are selected. Set `NULL` to show the count alone.
 #' @return A `reactive` returning an integer vector of selected row indices into
 #'   `data` (`integer(0)` when nothing is selected). When `DT` is not installed
 #'   the module renders nothing and the reactive is always `integer(0)`,
@@ -53,7 +55,9 @@ persona_selector_ui <- function(id) {
 #' @seealso [persona_selector_ui()].
 #' @export
 persona_selector_server <- function(id, data, overview = NULL,
-                                    page_length = 8L, height = "260px") {
+                                    page_length = 8L, height = "260px",
+                                    empty_selection_note =
+                                      "A seeded sample of the requested size will be drawn.") {
   shiny::moduleServer(id, function(input, output, session) {
     if (!pkg_available("DT")) {
       return(shiny::reactive(integer(0)))
@@ -82,10 +86,12 @@ persona_selector_server <- function(id, data, overview = NULL,
       total <- if (is.null(d)) 0L else NROW(d)
       selected <- length(selected_r())
       if (selected == 0L) {
-        paste0(
-          "0 of ", total, " selected. ",
-          "A seeded sample of the requested size will be drawn."
-        )
+        count <- paste0("0 of ", total, " selected.")
+        if (length(empty_selection_note)) {
+          paste(count, empty_selection_note)
+        } else {
+          count
+        }
       } else {
         paste0(selected, " of ", total, " selected.")
       }

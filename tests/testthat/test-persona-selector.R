@@ -34,6 +34,20 @@ test_that("persona_selector_ui places a live count beside the table", {
   )
 })
 
+test_that("the empty selection note can be omitted", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("DT")
+  d <- data.frame(ideology = c(-1, 0, 1))
+  shiny::testServer(
+    persona_selector_server,
+    args = list(id = "p", data = d, empty_selection_note = NULL),
+    {
+      session$setInputs(table_rows_selected = NULL)
+      expect_identical(output$selection_count, "0 of 3 selected.")
+    }
+  )
+})
+
 test_that("the selector degrades without DT instead of erroring", {
   skip_if_not_installed("shiny")
   local_mocked_bindings(pkg_available = function(package) FALSE)

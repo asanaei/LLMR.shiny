@@ -32,6 +32,50 @@ column_names_for_mapping <- function(data) {
   names(as.data.frame(data))
 }
 
+#' Guess a column for a data-mapping role
+#'
+#' Column names are matched without regard to case or common separators.
+#' When no recognized name remains, the first available column is returned.
+#' Text names include `text`, `body`, `content`, `response`, `message`, and
+#' `utterance`; label names include `label`, `labels`, `code`, `category`, and
+#' `class`; identifier names include `id`, `doc_id`, and `unit_id`.
+#'
+#' @param cols A character vector of column names.
+#' @param kind The mapping role to identify: `"text"`, `"label"`, or `"id"`.
+#' @param exclude Column names that are already assigned to another role.
+#' @return One column name as a character vector of length one, or `NULL` when
+#'   no column remains.
+#' @export
+#' @examples
+#' cols <- c("id", "text", "label")
+#' text_col <- guess_column(cols, "text")
+#' guess_column(cols, "label", exclude = text_col)
+guess_column <- function(cols, kind = c("text", "label", "id"),
+                         exclude = character()) {
+  kind <- match.arg(kind)
+  cols <- as.character(cols)
+  remaining <- cols[!is.na(cols) & !cols %in% as.character(exclude)]
+  if (!length(remaining)) {
+    return(NULL)
+  }
+
+  variants <- list(
+    text = c("text", "body", "content", "response", "message", "utterance"),
+    label = c("label", "labels", "code", "category", "class"),
+    id = c("id", "doc_id", "unit_id")
+  )
+  normalize <- function(x) {
+    gsub("[^[:alnum:]]", "", tolower(trimws(x)))
+  }
+  matched <- match(normalize(variants[[kind]]), normalize(remaining), nomatch = 0L)
+  matched <- matched[matched > 0L]
+  if (length(matched)) {
+    return(remaining[[matched[[1L]]]])
+  }
+
+  remaining[[1L]]
+}
+
 #' Validate a column mapping
 #'
 #' @param data A data frame.

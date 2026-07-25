@@ -4,12 +4,21 @@
 \alias{shell_sidebar}
 \title{The standard GUI sidebar: mode, live configuration, and usage}
 \usage{
-shell_sidebar(id = NULL, default_provider = "groq")
+shell_sidebar(
+  id = NULL,
+  default_provider = "groq",
+  max_tokens_help = "Leave blank to use the model default.",
+  max_tokens_placeholder = "Model default"
+)
 }
 \arguments{
 \item{id}{The module namespace (or \code{NULL} for top-level inputs).}
 
 \item{default_provider}{Provider selected initially.}
+
+\item{max_tokens_help}{Help text for a blank maximum-output-token field.}
+
+\item{max_tokens_placeholder}{Placeholder for the maximum-output-token field.}
 }
 \value{
 A \code{bslib::sidebar}.

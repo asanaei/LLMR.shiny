@@ -9,7 +9,8 @@ persona_selector_server(
   data,
   overview = NULL,
   page_length = 8L,
-  height = "260px"
+  height = "260px",
+  empty_selection_note = "A seeded sample of the requested size will be drawn."
 )
 }
 \arguments{
@@ -24,6 +25,9 @@ available, else the first columns of \code{data}.}
 \item{page_length}{Rows per page in the table. Default \code{8}.}
 
 \item{height}{CSS height for the scrollable table body. Default \code{"260px"}.}
+
+\item{empty_selection_note}{Optional text appended to the count when no rows
+are selected. Set \code{NULL} to show the count alone.}
 }
 \value{
 A \code{reactive} returning an integer vector of selected row indices into
