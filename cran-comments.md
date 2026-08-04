@@ -1,10 +1,19 @@
-## Submission
+## Resubmission
 
-Update to 0.1.2, a correction of the 0.1.1 release: `build_runner("live")`
-returns a callable function, demonstration results carry explicit source
-fields, usage helpers use token vocabulary, and two error-display
-internals left the exported surface while the demo annotator joined it
-(downstream family packages call it across the namespace boundary).
+This is the identical 0.1.2 tarball submitted in late July. CRAN asked that
+the update wait about a week, because 0.1.1 had been published on 2026-07-21
+only days before; it returns after that wait. Three new packages under
+submission (FocusGroup, LLMRcontent, LLMRpanel) declare LLMR.shiny
+(>= 0.1.2) in Suggests and their GUIs call objects that 0.1.2 exports, so
+this update precedes them.
+
+## The update
+
+0.1.2 corrects the 0.1.1 release: `build_runner("live")` returns a callable
+function, demonstration results carry explicit source fields, usage helpers
+use token vocabulary, and two error-display internals left the exported
+surface while the demo annotator joined it (downstream family packages call
+it across the namespace boundary).
 
 LLMR is in Suggests, not Imports: demonstration execution, key-state tiles, CSV
 mapping, and usage accounting work without it. Live execution and live
@@ -15,14 +24,13 @@ forced suggested packages (_R_CHECK_FORCE_SUGGESTS_=false).
 ## Test environments
 
 - local macOS (Darwin 25.5.0), R 4.4.3
-- R CMD check --as-cran --no-manual on the built tarball, with NOT_CRAN=false
+- R CMD check --as-cran on the built tarball, with NOT_CRAN=false
   and _R_CHECK_FORCE_SUGGESTS_=false
 
 ## R CMD check results
 
-0 errors | 0 warnings | 3 notes
+0 errors | 0 warnings | 2 notes
 
-- "New submission": expected for a first submission.
 - "checking for future file timestamps ... NOTE: unable to verify current
   time": environmental (the check machine could not reach a time server); it
   does not reproduce on CRAN's builders.
@@ -32,5 +40,5 @@ forced suggested packages (_R_CHECK_FORCE_SUGGESTS_=false).
 
 ## Reverse dependencies
 
-None on CRAN. The author's GUI packages (LLMRcontent, LLMRpanel, FocusGroup)
-will depend on this package and are submitted after it.
+None on CRAN. The author's GUI packages (FocusGroup, LLMRcontent, LLMRpanel)
+Suggest this package and are submitted after it.
