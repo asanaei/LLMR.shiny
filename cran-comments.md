@@ -1,8 +1,9 @@
 ## Resubmission
 
-This is the identical 0.1.2 tarball submitted in late July. CRAN asked that
-the update wait about a week, because 0.1.1 had been published on 2026-07-21
-only days before; it returns after that wait. Three new packages under
+This resubmits the 0.1.2 declined in late July: CRAN asked that the update
+wait about a week, because 0.1.1 had been published on 2026-07-21 only days
+before. The code is unchanged from that submission; the only difference is
+the order of the NEWS bullets. Three new packages under
 submission (FocusGroup, LLMRcontent, LLMRpanel) declare LLMR.shiny
 (>= 0.1.2) in Suggests and their GUIs call objects that 0.1.2 exports, so
 this update precedes them.
