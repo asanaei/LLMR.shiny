@@ -4,14 +4,25 @@
 \alias{read_csv_upload}
 \title{Read an uploaded CSV (a Shiny fileInput value)}
 \usage{
-read_csv_upload(file)
+read_csv_upload(file, col_classes = NA, na_strings = "NA")
 }
 \arguments{
 \item{file}{A \code{fileInput} value (a list with \code{datapath}).}
+
+\item{col_classes}{Passed to \code{\link[utils:read.table]{utils::read.csv()}} as \code{colClasses}. The
+default, \code{NA}, infers each column's type.}
+
+\item{na_strings}{Passed to \code{\link[utils:read.table]{utils::read.csv()}} as \code{na.strings}. The default
+reads the text \code{"NA"} as missing.}
 }
 \value{
 A data frame.
 }
 \description{
-Read an uploaded CSV (a Shiny fileInput value)
+By default every column's type is inferred, as \code{\link[utils:read.table]{utils::read.csv()}} does, so
+an identifier such as \code{001} becomes the number 1 and two identifiers \code{001}
+and \code{01} become the same value. To keep identifiers and text exactly as
+written, read with \code{col_classes = "character"} and \code{na_strings = character(0)}, and convert the other columns afterwards with
+\code{utils::type.convert(x, as.is = TRUE, na.strings = "NA")}, which reproduces
+the default inference.
 }

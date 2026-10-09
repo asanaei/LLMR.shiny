@@ -1,3 +1,13 @@
+# LLMR.shiny 0.1.3
+
+* `read_csv_upload()` and `read_csv_path()` accept `col_classes` and
+  `na_strings`, so identifiers such as `001` and text such as `"NA"` can be
+  read exactly as written. The defaults read as before.
+
+* `validate_column_mapping()`, and therefore `map_columns()`, refuses duplicate
+  or empty column names, which made name-based mapping ambiguous, and accepts
+  only one label column or none.
+
 # LLMR.shiny 0.1.2
 
 * `build_runner("live")` returns a callable function, and `report_text()`

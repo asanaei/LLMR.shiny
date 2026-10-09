@@ -4,23 +4,38 @@
 
 #' Read an uploaded CSV (a Shiny fileInput value)
 #'
+#' By default every column's type is inferred, as [utils::read.csv()] does, so
+#' an identifier such as `001` becomes the number 1 and two identifiers `001`
+#' and `01` become the same value. To keep identifiers and text exactly as
+#' written, read with `col_classes = "character"` and `na_strings =
+#' character(0)`, and convert the other columns afterwards with
+#' `utils::type.convert(x, as.is = TRUE, na.strings = "NA")`, which reproduces
+#' the default inference.
+#'
 #' @param file A `fileInput` value (a list with `datapath`).
+#' @param col_classes Passed to [utils::read.csv()] as `colClasses`. The
+#'   default, `NA`, infers each column's type.
+#' @param na_strings Passed to [utils::read.csv()] as `na.strings`. The default
+#'   reads the text `"NA"` as missing.
 #' @return A data frame.
 #' @export
-read_csv_upload <- function(file) {
+read_csv_upload <- function(file, col_classes = NA, na_strings = "NA") {
   if (is.null(file) || is.null(file$datapath)) {
     stop("No CSV file was provided.", call. = FALSE)
   }
-  utils::read.csv(file$datapath, stringsAsFactors = FALSE, check.names = FALSE)
+  utils::read.csv(file$datapath, stringsAsFactors = FALSE, check.names = FALSE,
+                  colClasses = col_classes, na.strings = na_strings)
 }
 
 #' Read a CSV from a path
 #'
 #' @param path File path.
+#' @inheritParams read_csv_upload
 #' @return A data frame.
 #' @export
-read_csv_path <- function(path) {
-  utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+read_csv_path <- function(path, col_classes = NA, na_strings = "NA") {
+  utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE,
+                  colClasses = col_classes, na.strings = na_strings)
 }
 
 #' Column names of a data frame, for a mapping select input
@@ -78,13 +93,26 @@ guess_column <- function(cols, kind = c("text", "label", "id"),
 
 #' Validate a column mapping
 #'
+#' Columns are selected by name, so the data must have unique, non-empty column
+#' names.
+#'
 #' @param data A data frame.
 #' @param text_col Required text column name.
-#' @param label_col Optional label column name.
+#' @param label_col Optional label column name; `NULL` or `""` for none.
 #' @return `TRUE`, or an error.
 #' @export
 validate_column_mapping <- function(data, text_col, label_col = NULL) {
   cols <- column_names_for_mapping(data)
+  bad <- is.na(cols) | !nzchar(trimws(cols))
+  if (any(bad)) {
+    stop(sprintf("Column(s) %s have no name; name every column before mapping.",
+                 paste(which(bad), collapse = ", ")), call. = FALSE)
+  }
+  dup <- unique(cols[duplicated(cols)])
+  if (length(dup)) {
+    stop(sprintf("The data have duplicate column names (%s); rename them before mapping.",
+                 paste(dup, collapse = ", ")), call. = FALSE)
+  }
   # A NULL/length-0 text_col is the common "nothing selected yet" Shiny state;
   # give a clear message rather than a base length-zero condition error.
   if (is.null(text_col) || length(text_col) != 1L || is.na(text_col) ||
@@ -94,8 +122,13 @@ validate_column_mapping <- function(data, text_col, label_col = NULL) {
   if (!text_col %in% cols) {
     stop("The selected text column is not in the data.", call. = FALSE)
   }
-  if (!is.null(label_col) && nzchar(label_col) && !label_col %in% cols) {
-    stop("The selected label column is not in the data.", call. = FALSE)
+  if (!is.null(label_col)) {
+    if (length(label_col) != 1L || is.na(label_col)) {
+      stop("Select one label column, or none.", call. = FALSE)
+    }
+    if (nzchar(label_col) && !label_col %in% cols) {
+      stop("The selected label column is not in the data.", call. = FALSE)
+    }
   }
   TRUE
 }

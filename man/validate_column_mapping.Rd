@@ -11,11 +11,12 @@ validate_column_mapping(data, text_col, label_col = NULL)
 
 \item{text_col}{Required text column name.}
 
-\item{label_col}{Optional label column name.}
+\item{label_col}{Optional label column name; \code{NULL} or \code{""} for none.}
 }
 \value{
 \code{TRUE}, or an error.
 }
 \description{
-Validate a column mapping
+Columns are selected by name, so the data must have unique, non-empty column
+names.
 }

@@ -4,10 +4,16 @@
 \alias{read_csv_path}
 \title{Read a CSV from a path}
 \usage{
-read_csv_path(path)
+read_csv_path(path, col_classes = NA, na_strings = "NA")
 }
 \arguments{
 \item{path}{File path.}
+
+\item{col_classes}{Passed to \code{\link[utils:read.table]{utils::read.csv()}} as \code{colClasses}. The
+default, \code{NA}, infers each column's type.}
+
+\item{na_strings}{Passed to \code{\link[utils:read.table]{utils::read.csv()}} as \code{na.strings}. The default
+reads the text \code{"NA"} as missing.}
 }
 \value{
 A data frame.
