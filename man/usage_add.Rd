@@ -9,11 +9,21 @@ usage_add(state, tokens)
 \arguments{
 \item{state}{A usage record.}
 
-\item{tokens}{A token-count list (see \code{\link[=extract_token_counts]{extract_token_counts()}}).}
+\item{tokens}{A token-count list (see \code{\link[=extract_token_counts]{extract_token_counts()}}) with any of
+\code{calls}, \code{result_rows}, \code{sent}, \code{received}, \code{total}, and \code{unknown}.}
 }
 \value{
 The updated usage record.
 }
 \description{
-Add realized usage to a usage record
+Token counts that are missing or \code{NA} are unknown, not zero: the record's
+token sums cover the known counts, and its \code{unknown} field counts the
+replies they leave out. A missing total is taken as sent plus received
+tokens when both are known. When \code{tokens} has no \code{unknown} field and any of
+its three counts is unknown, each of its \code{calls} counts as unknown.
+}
+\examples{
+state <- usage_add(usage_empty(), list(calls = 2, sent = 120, received = 40))
+state <- usage_add(state, list(calls = 1))
+state[c("calls", "sent", "received", "total", "unknown")]
 }

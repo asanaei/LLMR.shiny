@@ -2,19 +2,48 @@
 % Please edit documentation in R/runners.R
 \name{extract_token_counts}
 \alias{extract_token_counts}
-\title{Extract call/token counts from a result frame}
+\title{Extract call and token counts from a result}
 \usage{
 extract_token_counts(x, fallback_calls = 0L)
 }
 \arguments{
-\item{x}{A result data frame (or list containing one).}
+\item{x}{A call-level data frame, or a list containing one. In a list, a
+data frame with token columns and call identifiers is used before one
+with token columns only, and either before other data frames, such as
+summaries.}
 
-\item{fallback_calls}{Call count to use when \code{x} has no result frame.}
+\item{fallback_calls}{Number of calls made when \code{x} holds no data frame;
+their usage is unknown.}
 }
 \value{
-A list with token totals and either \code{calls}, when explicit call
-provenance is available, or \code{result_rows}.
+A list with \code{sent}, \code{received}, and \code{total} (sums over the rows that
+report each count, or \code{NA} when none does and some usage is unknown),
+\code{unknown}, and \code{calls} when explicit call provenance is available or
+\code{result_rows} when it is not. A frame mixing demonstration and live rows
+yields both.
 }
 \description{
-Extract call/token counts from a result frame
+Reads token usage and the number of calls from a call-level result frame,
+for \code{\link[=usage_add]{usage_add()}}. A count that a row does not report is unknown, not zero:
+the sums cover the rows that report a count, and \code{unknown} counts the rows
+missing any of the three. A row's total is its \code{total_tokens}, or its sent
+plus received tokens when both are known. Failed rows (\code{success = FALSE})
+and rows packed behind another (\code{rowpack_row} above 1) are not counted as
+unknown. A token column that is not numeric, such as a factor, is not read:
+its counts are unknown, with a warning.
+}
+\details{
+Calls are counted from the first identifier column among \code{call_id},
+\code{request_id}, and \code{response_id} that every row carries, except failed rows,
+which may lack one and count as one call each. Rows sharing an identifier
+count as one call, as rows packed into one request do. When identifiers are
+incomplete, the rows are counted as \code{result_rows}, with a warning.
+Demonstration rows (see \code{\link[=annotate_demo_result]{annotate_demo_result()}}) are counted as
+\code{result_rows} and add no tokens.
+}
+\examples{
+calls <- data.frame(response_id = c("r1", "r2", "r3"),
+                    sent_tokens = c(100L, 110L, NA),
+                    rec_tokens = c(20L, 21L, NA))
+extract_token_counts(calls)
 }

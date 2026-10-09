@@ -1,12 +1,14 @@
 # LLMR.shiny 0.1.3
 
-* `read_csv_upload()` and `read_csv_path()` accept `col_classes` and
-  `na_strings`, so identifiers such as `001` and text such as `"NA"` can be
-  read exactly as written. The defaults read as before.
-
-* `validate_column_mapping()`, and therefore `map_columns()`, refuses duplicate
-  or empty column names, which made name-based mapping ambiguous, and accepts
-  only one label column or none.
+* `read_csv_upload()` and `read_csv_path()` gain `col_classes` and
+  `na_strings`, so identifiers such as `001` can be read as written.
+* `validate_column_mapping()` refuses duplicate or empty column names and more
+  than one label column.
+* Unreported token usage is unknown, not zero: `extract_token_counts()` and
+  `usage_add()` count it, and the usage tile shows lower bounds.
+* `extract_token_counts()` uses the call table in a list rather than the first
+  data frame, counts failed calls, warns when call identifiers are incomplete,
+  and leaves demonstration rows' tokens out.
 
 # LLMR.shiny 0.1.2
 

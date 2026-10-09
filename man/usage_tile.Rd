@@ -13,5 +13,6 @@ usage_tile(state)
 A \code{bslib::value_box}.
 }
 \description{
-A value box reporting session usage
+Token counts are shown as lower bounds ("at least") when some replies did
+not report usage, and as unknown when no reply reported them.
 }

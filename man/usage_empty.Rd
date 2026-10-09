@@ -7,7 +7,9 @@
 usage_empty()
 }
 \value{
-A list with zeroed counters.
+A list with zeroed counters: \code{calls}, \code{result_rows}, \code{sent},
+\code{received}, \code{total}, \code{unknown} (replies whose usage was not reported),
+\code{planned_calls}, and \code{planned_label}.
 }
 \description{
 An empty usage record
