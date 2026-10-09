@@ -225,7 +225,7 @@ extract_token_counts <- function(x, fallback_calls = 0L) {
   df <- find_call_frame(x)
   if (is.null(df)) {
     n <- count_field(fallback_calls, "fallback_calls")
-    known <- if (n > 0L) NA_integer_ else 0L
+    known <- if (identical(n, 0L)) 0L else NA_integer_
     return(list(calls = n, sent = known, received = known, total = known,
                 unknown = n))
   }
@@ -331,10 +331,17 @@ count_calls <- function(df, rows, failed) {
   NULL
 }
 
-# A count field: absent counts as 0; otherwise one nonnegative whole number.
+# A count field: absent counts as 0, and NA is an unknown count, kept as NA
+# with a warning, since usage accounting runs after a finished run and must
+# not end the session. Anything else must be one nonnegative whole number.
 count_field <- function(x, name) {
   if (!length(x)) return(0L)
-  if (length(x) != 1L || !is.numeric(x) || is.na(x) || x < 0 || x != round(x)) {
+  if (length(x) == 1L && is.na(x)) {
+    warning(sprintf("`%s` is NA; the count is recorded as unknown.", name),
+            call. = FALSE)
+    return(NA_integer_)
+  }
+  if (length(x) != 1L || !is.numeric(x) || x < 0 || x != round(x)) {
     stop(sprintf("`%s` must be one nonnegative whole number.", name),
          call. = FALSE)
   }

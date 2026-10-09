@@ -33,7 +33,8 @@ usage_set_plan <- function(state, calls, label = "Next run") {
 #' token sums cover the known counts, and its `unknown` field counts the
 #' replies they leave out. A missing total is taken as sent plus received
 #' tokens when both are known. When `tokens` has no `unknown` field and any of
-#' its three counts is unknown, each of its `calls` counts as unknown.
+#' its three counts is unknown, each of its `calls` counts as unknown. A call
+#' or row count given as `NA` is recorded as unknown, with a warning.
 #'
 #' @param state A usage record.
 #' @param tokens A token-count list (see [extract_token_counts()]) with any of
@@ -57,15 +58,16 @@ usage_add <- function(state, tokens) {
   } else {
     count_field(tokens[["unknown"]], "tokens$unknown")
   }
-  add <- function(old, new) {
+  add_count <- function(old, new) as.integer((old %||% 0L) + new)
+  add_tokens <- function(old, new) {
     as.integer((old %||% 0L) + if (is.na(new)) 0L else new)
   }
-  state$calls <- add(state$calls, calls)
-  state$result_rows <- add(state$result_rows, rows)
-  state$sent <- add(state$sent, sent)
-  state$received <- add(state$received, received)
-  state$total <- add(state$total, total)
-  state$unknown <- add(state$unknown, unknown)
+  state$calls <- add_count(state$calls, calls)
+  state$result_rows <- add_count(state$result_rows, rows)
+  state$sent <- add_tokens(state$sent, sent)
+  state$received <- add_tokens(state$received, received)
+  state$total <- add_tokens(state$total, total)
+  state$unknown <- add_count(state$unknown, unknown)
   state$planned_calls <- 0L
   state$planned_label <- "No pending run"
   state
@@ -96,28 +98,39 @@ usage_tile <- function(state) {
   calls <- as.integer(state$calls %||% 0L)
   result_rows <- as.integer(state$result_rows %||% 0L)
   unknown <- as.integer(state$unknown %||% 0L)
+  some_unknown <- is.na(unknown) || unknown > 0L
   sent <- state$sent %||% 0L
   received <- state$received %||% 0L
   bound <- function(v) {
-    if (unknown == 0L) return(as.character(v))
+    if (!some_unknown) return(as.character(v))
     if (identical(as.numeric(v), 0)) "unknown" else paste("at least", v)
   }
-  token_line <- if (unknown > 0L && identical(as.numeric(sent), 0) &&
+  token_line <- if (some_unknown && identical(as.numeric(sent), 0) &&
                     identical(as.numeric(received), 0)) {
     "Token usage unknown"
   } else {
     paste0("Sent ", bound(sent), " / Received ", bound(received), " tokens")
   }
-  unknown_line <- if (unknown > 0L) {
+  unknown_line <- if (some_unknown) {
     shiny::tags$p(
       class = "small text-body-secondary",
-      paste0("Usage was not reported for ", unknown,
-             if (identical(unknown, 1L)) " reply." else " replies.")
+      if (is.na(unknown)) {
+        "Usage was not reported for some replies."
+      } else {
+        paste0("Usage was not reported for ", unknown,
+               if (identical(unknown, 1L)) " reply." else " replies.")
+      }
     )
   }
   realized <- c(
-    paste(calls, if (identical(calls, 1L)) "call" else "calls"),
-    if (result_rows > 0L) {
+    if (is.na(calls)) {
+      "Unknown number of calls"
+    } else {
+      paste(calls, if (identical(calls, 1L)) "call" else "calls")
+    },
+    if (is.na(result_rows)) {
+      "unknown result rows"
+    } else if (result_rows > 0L) {
       paste(
         result_rows,
         if (identical(result_rows, 1L)) "result row" else "result rows"

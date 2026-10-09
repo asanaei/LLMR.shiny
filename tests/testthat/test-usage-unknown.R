@@ -56,7 +56,12 @@ test_that("with no result frame, the fallback calls have unknown usage", {
   )
   expect_identical(extract_token_counts(NULL)[c("calls", "sent", "unknown")],
                    list(calls = 0L, sent = 0L, unknown = 0L))
-  expect_error(extract_token_counts(NULL, fallback_calls = NA),
+  expect_warning(na <- extract_token_counts(NULL, fallback_calls = NA),
+                 "recorded as unknown")
+  expect_identical(na[c("calls", "sent", "unknown")],
+                   list(calls = NA_integer_, sent = NA_integer_,
+                        unknown = NA_integer_))
+  expect_error(extract_token_counts(NULL, fallback_calls = -1),
                "nonnegative whole")
 })
 
@@ -146,4 +151,13 @@ test_that("the usage tile never shows unknown usage as zero", {
   expect_match(tile(part), "Sent unknown / Received at least 5 tokens",
                fixed = TRUE)
   expect_no_match(tile(part), "Sent 0", fixed = TRUE)
+})
+
+test_that("an unknown call count is recorded as unknown without an error", {
+  expect_warning(s <- usage_add(usage_empty(), list(calls = NA_integer_)),
+                 "recorded as unknown")
+  expect_identical(s$calls, NA_integer_)
+  html <- paste(as.character(usage_tile(s)), collapse = " ")
+  expect_match(html, "Unknown number of calls", fixed = TRUE)
+  expect_match(html, "Usage was not reported for some replies.", fixed = TRUE)
 })

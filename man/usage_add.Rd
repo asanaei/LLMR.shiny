@@ -20,7 +20,8 @@ Token counts that are missing or \code{NA} are unknown, not zero: the record's
 token sums cover the known counts, and its \code{unknown} field counts the
 replies they leave out. A missing total is taken as sent plus received
 tokens when both are known. When \code{tokens} has no \code{unknown} field and any of
-its three counts is unknown, each of its \code{calls} counts as unknown.
+its three counts is unknown, each of its \code{calls} counts as unknown. A call
+or row count given as \code{NA} is recorded as unknown, with a warning.
 }
 \examples{
 state <- usage_add(usage_empty(), list(calls = 2, sent = 120, received = 40))
