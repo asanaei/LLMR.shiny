@@ -2,26 +2,43 @@
 % Please edit documentation in R/usage.R
 \name{usage_add}
 \alias{usage_add}
-\title{Add realized usage to a usage record}
+\title{Add usage to a session record}
 \usage{
 usage_add(state, tokens)
 }
 \arguments{
-\item{state}{A usage record.}
+\item{state}{A usage record, usually from \code{\link[=usage_empty]{usage_empty()}}, or \code{NULL}.}
 
-\item{tokens}{A token-count list (see \code{\link[=extract_token_counts]{extract_token_counts()}}) with any of
-\code{calls}, \code{result_rows}, \code{sent}, \code{received}, \code{total}, and \code{unknown}.}
+\item{tokens}{A named list, such as the result of \code{\link[=extract_token_counts]{extract_token_counts()}}.
+It may contain \code{calls}, \code{result_rows}, \code{sent}, \code{received}, \code{total},
+\code{unknown}, \code{sent_unknown}, and \code{received_unknown}.}
 }
 \value{
-The updated usage record.
+The updated record with double token subtotals and integer counts.
+\code{planned_calls} is zero and \code{planned_label} is \code{"No pending run"}.
+Other fields are retained.
 }
 \description{
-Token counts that are missing or \code{NA} are unknown, not zero: the record's
-token sums cover the known counts, and its \code{unknown} field counts the
-replies they leave out. A missing total is taken as sent plus received
-tokens when both are known. When \code{tokens} has no \code{unknown} field and any of
-its three counts is unknown, each of its \code{calls} counts as unknown. A call
-or row count given as \code{NA} is recorded as unknown, with a warning.
+Adds call counts and token subtotals to a usage record and clears its
+pending run.
+}
+\details{
+Missing or \code{NA} token values contribute nothing to the stored subtotals.
+A total absent from \code{tokens} is computed from sent plus received when
+both are known and \code{unknown} is absent or zero. An explicit \code{NA} total
+remains unknown. Token values must be finite nonnegative whole numbers;
+an invalid value is treated as unknown with one warning naming the field.
+
+A supplied \code{unknown} count is added to the record. If absent, it defaults
+to the call count when any token component is unknown, and zero otherwise.
+The same rule applies separately to \code{sent_unknown} and \code{received_unknown}
+using their respective components. Result rows alone do not supply these
+unknown counts.
+
+Missing call and result-row counts contribute zero. A scalar \code{NA} count
+is retained with a warning. Other counts must be finite nonnegative whole
+numbers that fit in an R integer. Fields absent from an older record
+start at zero; missingness not recorded there cannot be recovered.
 }
 \examples{
 state <- usage_add(usage_empty(), list(calls = 2, sent = 120, received = 40))

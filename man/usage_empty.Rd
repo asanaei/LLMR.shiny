@@ -2,15 +2,17 @@
 % Please edit documentation in R/usage.R
 \name{usage_empty}
 \alias{usage_empty}
-\title{An empty usage record}
+\title{Create an empty session usage record}
 \usage{
 usage_empty()
 }
 \value{
-A list with zeroed counters: \code{calls}, \code{result_rows}, \code{sent},
-\code{received}, \code{total}, \code{unknown} (replies whose usage was not reported),
-\code{planned_calls}, and \code{planned_label}.
+A named list with zero numeric counters \code{calls}, \code{result_rows},
+\code{sent}, \code{received}, \code{total}, \code{unknown}, \code{sent_unknown},
+\code{received_unknown}, and \code{planned_calls}. Token subtotals are doubles;
+the other counters are integers. \code{planned_label} is initialized to
+\code{"No pending run"}.
 }
 \description{
-An empty usage record
+Initializes the counters used by \code{\link[=usage_add]{usage_add()}} and \code{\link[=usage_tile]{usage_tile()}}.
 }

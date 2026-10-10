@@ -2,44 +2,69 @@
 % Please edit documentation in R/runners.R
 \name{extract_token_counts}
 \alias{extract_token_counts}
-\title{Extract call and token counts from a result}
+\title{Summarize call counts and token usage}
 \usage{
 extract_token_counts(x, fallback_calls = 0L)
 }
 \arguments{
-\item{x}{A call-level data frame, or a list containing one. In a list, a
-data frame with token columns and call identifiers is used before one
-with token columns only, and either before other data frames, such as
-summaries.}
+\item{x}{A result data frame, or a list containing data frames. A data
+frame supplied directly is used as given. List components are ranked
+by their columns in the following order.
+\enumerate{
+\item Both call identifiers and tokens.
+\item Call identifiers only.
+\item Tokens only.
+\item Neither.
+}
+Ties use the first frame and produce a warning naming the candidates.}
 
-\item{fallback_calls}{Number of calls made when \code{x} holds no data frame;
-their usage is unknown.}
+\item{fallback_calls}{A nonnegative whole-number call count used when
+\code{x} contains no data frame. A positive count has unknown usage.
+\code{NA} is retained with a warning. Counts must fit in an R integer.}
 }
 \value{
-A list with \code{sent}, \code{received}, and \code{total} (sums over the rows that
-report each count, or \code{NA} when none does and some usage is unknown),
-\code{unknown}, and \code{calls} when explicit call provenance is available or
-\code{result_rows} when it is not. A frame mixing demonstration and live rows
-yields both.
+A named list with double token subtotals \code{sent}, \code{received}, and
+\code{total}, and integer counts \code{unknown}, \code{sent_unknown}, and
+\code{received_unknown}. A subtotal is \code{NA} when no value is reported and
+\code{unknown} is positive; otherwise an empty subtotal is zero.
+
+The list contains \code{calls} when an identifier column qualifies or the
+fallback is used. It also contains \code{calls} when an identifier column
+exists and every live row is failed and unidentified. Otherwise it
+contains \code{result_rows}. Demonstration rows add \code{result_rows}, including
+when identifiable live calls are present.
 }
 \description{
-Reads token usage and the number of calls from a call-level result frame,
-for \code{\link[=usage_add]{usage_add()}}. A count that a row does not report is unknown, not zero:
-the sums cover the rows that report a count, and \code{unknown} counts the rows
-missing any of the three. A row's total is its \code{total_tokens}, or its sent
-plus received tokens when both are known. Failed rows (\code{success = FALSE})
-and rows packed behind another (\code{rowpack_row} above 1) are not counted as
-unknown. A token column that is not numeric, such as a factor, is not read:
-its counts are unknown, with a warning.
+Reads token counts from a result data frame for use by \code{\link[=usage_add]{usage_add()}}.
 }
 \details{
-Calls are counted from the first identifier column among \code{call_id},
-\code{request_id}, and \code{response_id} that every row carries, except failed rows,
-which may lack one and count as one call each. Rows sharing an identifier
-count as one call, as rows packed into one request do. When identifiers are
-incomplete, the rows are counted as \code{result_rows}, with a warning.
-Demonstration rows (see \code{\link[=annotate_demo_result]{annotate_demo_result()}}) are counted as
-\code{result_rows} and add no tokens.
+A row's total is its reported \code{total_tokens} value. If it is missing,
+the total is computed from \code{sent_tokens} and \code{rec_tokens} when both are
+known. Each component is summed over its reported values, including
+failed calls. An absent column supplies missing values. Nonnumeric,
+negative, fractional, and non-finite values are treated as missing with
+one warning per column. A logical column containing only \code{NA} is accepted
+as missing without a warning.
+
+The integer \code{unknown} count includes live rows missing any count after
+computing the total. \code{sent_unknown} and \code{received_unknown} count rows
+missing the respective component. A row with \code{rowpack_row > 1} is excluded
+from these counts only when a live row with the same \code{rowpack_id} and
+\code{rowpack_row == 1} is present.
+
+Call identifiers are considered in the order \code{call_id}, \code{request_id},
+then \code{response_id}. The first column with complete identifiers on at
+least one live row and on every nonfailed live row is used. Distinct
+identifiers count as calls. A list-column may contain several identifiers
+per row; missing or empty entries make that row incomplete. Failed rows
+(\code{success = FALSE}) with incomplete identifiers add one call each. If an identifier column exists
+but every live row is failed and unidentified, each row counts as one call.
+
+If no identifier column qualifies, live rows are counted as result rows.
+Incomplete identifiers on nonfailed rows produce a warning. Rows with
+\code{run_mode = "demo"} add result rows and no tokens. If \code{run_mode} is absent,
+the \code{llmrshiny_demo_result} class marks the whole frame as demonstration
+output.
 }
 \examples{
 calls <- data.frame(response_id = c("r1", "r2", "r3"),

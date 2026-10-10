@@ -1,14 +1,15 @@
 # LLMR.shiny 0.1.3
 
-* `read_csv_upload()` and `read_csv_path()` gain `col_classes` and
-  `na_strings`, so identifiers such as `001` can be read as written.
-* `validate_column_mapping()` refuses duplicate or empty column names and more
-  than one label column.
+* `read_csv_upload()` and `read_csv_path()` accept `col_classes` and
+  `na_strings` to control column types and missing values.
+* `validate_column_mapping()` rejects duplicate or empty column names and
+  selections containing more than one label column.
 * Unreported token usage is unknown, not zero: `extract_token_counts()` and
-  `usage_add()` count it, and the usage tile shows lower bounds.
-* `extract_token_counts()` uses the call table in a list rather than the first
-  data frame, counts failed calls, warns when call identifiers are incomplete,
-  and leaves demonstration rows' tokens out.
+  `usage_add()` count it, and `usage_tile()` shows lower bounds or "unknown".
+* `extract_token_counts()` selects the call table in a list by its columns,
+  counts failed calls, and leaves demonstration rows out.
+* Invalid token values warn and count as unknown. Non-finite or out-of-range
+  call and row counts now raise errors.
 
 # LLMR.shiny 0.1.2
 

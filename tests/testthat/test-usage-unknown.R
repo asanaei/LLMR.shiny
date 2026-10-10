@@ -1,163 +1,252 @@
-# Token usage that a reply does not report is unknown, not zero: the sums
-# cover the replies that report usage, and `unknown` counts the others.
-
-calls <- function() {
+usage_calls <- function() {
   data.frame(response_id = paste0("r", 1:4),
-             sent_tokens = c(100L, 110L, 120L, 130L),
-             rec_tokens = c(20L, 21L, 22L, 23L),
-             total_tokens = c(120L, 131L, 142L, 153L))
+             sent_tokens = c(100, 110, 120, 130),
+             rec_tokens = c(20, 21, 22, 23),
+             total_tokens = c(120, 131, 142, 153))
 }
 
-test_that("fully reported usage and known zeros are summed", {
-  expect_identical(
-    extract_token_counts(calls()),
-    list(calls = 4L, sent = 460L, received = 86L, total = 546L, unknown = 0L)
-  )
-  z <- calls()
+token_values <- function(x) x[c("sent", "received", "total")]
+usage_html <- function(x) paste(as.character(usage_tile(x)), collapse = " ")
+
+test_that("reported counts and known zeros have double subtotals", {
+  expect_identical(extract_token_counts(usage_calls()),
+                   list(calls = 4L, sent = 460, received = 86, total = 546,
+                        unknown = 0L, sent_unknown = 0L, received_unknown = 0L))
+  z <- usage_calls()
   z[c("sent_tokens", "rec_tokens", "total_tokens")] <- 0L
-  expect_identical(extract_token_counts(z)[c("sent", "total", "unknown")],
-                   list(sent = 0L, total = 0L, unknown = 0L))
+  expect_identical(token_values(extract_token_counts(z)),
+                   list(sent = 0, received = 0, total = 0))
 })
 
-test_that("absent or all-missing token columns are unknown, not zero", {
-  a <- calls()
-  a[c("sent_tokens", "rec_tokens", "total_tokens")] <- NA_integer_
-  expect_identical(
-    extract_token_counts(a)[c("sent", "received", "total", "unknown")],
-    list(sent = NA_integer_, received = NA_integer_, total = NA_integer_,
-         unknown = 4L)
-  )
-  expect_identical(extract_token_counts(calls()["response_id"])$unknown, 4L)
-  lg <- calls()["response_id"]
-  lg$sent_tokens <- NA
-  expect_identical(extract_token_counts(lg)$unknown, 4L)
-})
-
-test_that("mixed reporting sums the known rows and counts the rest", {
-  m <- calls()
-  m[2, c("sent_tokens", "rec_tokens", "total_tokens")] <- NA
-  expect_identical(
-    extract_token_counts(m)[c("sent", "received", "total", "unknown")],
-    list(sent = 350L, received = 65L, total = 415L, unknown = 1L)
-  )
-  f <- m
-  f$success <- c(TRUE, FALSE, TRUE, TRUE)
-  f$response_id[2] <- NA
-  failed <- extract_token_counts(f)
-  expect_identical(failed$unknown, 0L)
-  expect_identical(failed$calls, 4L)
-})
-
-test_that("with no result frame, the fallback calls have unknown usage", {
-  expect_identical(
-    extract_token_counts(NULL, fallback_calls = 3),
-    list(calls = 3L, sent = NA_integer_, received = NA_integer_,
-         total = NA_integer_, unknown = 3L)
-  )
-  expect_identical(extract_token_counts(NULL)[c("calls", "sent", "unknown")],
-                   list(calls = 0L, sent = 0L, unknown = 0L))
-  expect_warning(na <- extract_token_counts(NULL, fallback_calls = NA),
-                 "recorded as unknown")
-  expect_identical(na[c("calls", "sent", "unknown")],
-                   list(calls = NA_integer_, sent = NA_integer_,
-                        unknown = NA_integer_))
-  expect_error(extract_token_counts(NULL, fallback_calls = -1),
-               "nonnegative whole")
-})
-
-test_that("a summary listed first does not stand in for the call table", {
-  summaries <- list(data.frame(n_calls = 4L, success_rate = 1),
-                    data.frame(sent_tokens = 460L, rec_tokens = 86L))
-  for (summ in summaries) {
-    out <- extract_token_counts(list(summary = summ, calls = calls()))
-    expect_identical(out$calls, 4L)
-    expect_identical(out$total, 546L)
+test_that("absent and all-missing columns retain all three unknown values", {
+  missing <- usage_calls()
+  missing[c("sent_tokens", "rec_tokens", "total_tokens")] <- NA_integer_
+  logical_na <- usage_calls()["response_id"]
+  logical_na$sent_tokens <- NA
+  for (d in list(missing, usage_calls()["response_id"], logical_na)) {
+    out <- extract_token_counts(d)
+    expect_identical(token_values(out),
+                     list(sent = NA_real_, received = NA_real_, total = NA_real_))
+    expect_identical(out$unknown, 4L)
+    expect_identical(out$sent_unknown, 4L)
+    expect_identical(out$received_unknown, 4L)
   }
 })
 
-test_that("incomplete identifiers count result rows, with a warning", {
-  p <- calls()
-  p$response_id[c(2, 4)] <- NA
-  expect_warning(out <- extract_token_counts(p),
-                 "2 of 4 rows have no `response_id`", fixed = TRUE)
-  expect_identical(out$result_rows, 4L)
-  expect_null(out$calls)
-  c2 <- calls()
-  c2$call_id <- c("x", NA, NA, NA)
-  expect_identical(extract_token_counts(c2)$calls, 4L)
+test_that("failed calls retain reported usage and count missing usage", {
+  d <- usage_calls()
+  d[2, c("sent_tokens", "rec_tokens", "total_tokens")] <- NA
+  d$success <- c(TRUE, FALSE, FALSE, TRUE)
+  d$response_id[2] <- NA
+  out <- extract_token_counts(d)
+  expect_identical(token_values(out), list(sent = 350, received = 65, total = 415))
+  expect_identical(out$unknown, 1L)
+  expect_identical(out$calls, 4L)
+  failed <- extract_token_counts(d[2, ])
+  expect_identical(token_values(failed),
+                   list(sent = NA_real_, received = NA_real_, total = NA_real_))
+  expect_identical(failed$unknown, 1L)
+  expect_identical(failed$calls, 1L)
 })
 
-test_that("retries sharing a request ID count as one request", {
-  r <- data.frame(request_id = c("q1", "q1", "q2"),
-                  sent_tokens = c(5L, 5L, 6L), rec_tokens = c(1L, 2L, 3L))
-  out <- extract_token_counts(r)
-  expect_identical(out$calls, 2L)
-  expect_identical(out$total, 22L)
+test_that("fallback counts and empty frames distinguish no calls from unknown usage", {
+  expect_identical(extract_token_counts(NULL, 3),
+                   list(calls = 3L, sent = NA_real_, received = NA_real_,
+                        total = NA_real_, unknown = 3L,
+                        sent_unknown = 3L, received_unknown = 3L))
+  for (x in list(NULL, usage_calls()[FALSE, ], data.frame())) {
+    out <- extract_token_counts(x)
+    expect_identical(token_values(out), list(sent = 0, received = 0, total = 0))
+    expect_identical(out$unknown, 0L)
+    expect_equal(out$calls %||% out$result_rows, 0L)
+  }
+  expect_warning(out <- extract_token_counts(NULL, NA), "recorded as unknown")
+  expect_identical(out$calls, NA_integer_)
+  expect_identical(token_values(out),
+                   list(sent = NA_real_, received = NA_real_, total = NA_real_))
+  for (n in c(-1, 0.5, Inf, -Inf, NaN, .Machine$integer.max + 1)) {
+    expect_error(extract_token_counts(NULL, n), "nonnegative whole")
+  }
 })
 
-test_that("non-numeric token columns are not read as counts", {
-  f <- calls()
-  f$sent_tokens <- factor(f$sent_tokens)
-  expect_warning(out <- extract_token_counts(f), "is factor, not numeric")
-  expect_identical(out$sent, NA_integer_)
+test_that("identifier frames outrank token summaries and ties warn", {
+  summary <- data.frame(sent_tokens = 460, rec_tokens = 86)
+  out <- extract_token_counts(list(summary = summary, calls = usage_calls()["response_id"]))
+  expect_identical(out$calls, 4L)
+  expect_identical(token_values(out),
+                   list(sent = NA_real_, received = NA_real_, total = NA_real_))
   expect_identical(out$unknown, 4L)
+  expect_identical(extract_token_counts(list(summary, usage_calls()))$total, 546)
+  expect_warning(out <- extract_token_counts(list(first = usage_calls(), second = usage_calls()[1, ])),
+                 "first, second; using first", fixed = TRUE)
+  expect_identical(out$calls, 4L)
+  expect_warning(out <- extract_token_counts(list(NULL, usage_calls(), usage_calls()[1, ])),
+                 "2, 3; using 2", fixed = TRUE)
+  expect_identical(out$calls, 4L)
 })
 
-test_that("demonstration rows add result rows but no tokens", {
-  d <- demo_runner()(data.frame(text = c("hello there", "general kenobi")))
-  expect_identical(extract_token_counts(d)[c("result_rows", "sent", "unknown")],
-                   list(result_rows = 2L, sent = 0L, unknown = 0L))
-  keep <- c("response_id", "sent_tokens", "rec_tokens", "total_tokens",
-            "run_mode")
-  live <- data.frame(response_id = "live-1", sent_tokens = 50L,
-                     rec_tokens = 10L, total_tokens = 60L, run_mode = "live")
-  out <- extract_token_counts(rbind(as.data.frame(d)[keep], live))
-  expect_identical(out[c("calls", "result_rows", "sent", "total")],
-                   list(calls = 1L, result_rows = 2L, sent = 50L, total = 60L))
+test_that("incomplete identifiers include empty list entries and all-missing columns", {
+  d <- usage_calls()
+  d$response_id[c(2, 4)] <- NA
+  expect_warning(out <- extract_token_counts(d), "2 of 4 rows have no `response_id`", fixed = TRUE)
+  expect_null(out$calls)
+  expect_identical(out$result_rows, 4L)
+  d$response_id <- NA_character_
+  expect_warning(out <- extract_token_counts(d), "4 of 4 rows")
+  expect_identical(out$result_rows, 4L)
+  d$success <- FALSE
+  expect_no_warning(out <- extract_token_counts(d))
+  expect_identical(out$calls, 4L)
+  d <- usage_calls()[1:2, ]
+  for (id in list(c("a", NA), c("a", ""), character(), list("a", NULL))) {
+    d$response_id <- list(id, "b")
+    expect_warning(out <- extract_token_counts(d), "1 of 2 rows")
+    expect_identical(out$result_rows, 2L)
+    d$success <- c(FALSE, TRUE)
+    expect_no_warning(out <- extract_token_counts(d))
+    expect_identical(out$calls, 2L)
+    d$success <- NULL
+  }
+  d$call_id <- c(NA, "x")
+  d$response_id <- c("a", "b")
+  expect_no_warning(out <- extract_token_counts(d))
+  expect_identical(out$calls, 2L)
+  d$call_id <- NA_character_
+  d$response_id <- c("shared", "shared")
+  d$success <- FALSE
+  expect_identical(extract_token_counts(d)$calls, 1L)
 })
 
-test_that("usage_add keeps unknown usage out of the sums and counts it", {
-  s <- usage_add(usage_empty(), list(calls = 27L, sent = 2700L, received = 540L))
-  expect_identical(s$total, 3240L)
+test_that("shared identifiers count requests and retain reported retry tokens", {
+  d <- data.frame(request_id = c("q1", "q1", "q2"),
+                  sent_tokens = c(5, 5, 6), rec_tokens = c(1, 2, 3))
+  expect_identical(extract_token_counts(d)$calls, 2L)
+  expect_identical(extract_token_counts(d)$total, 22)
+})
+
+test_that("packed missing values require the usage-bearing row in the same frame", {
+  d <- data.frame(response_id = c("r1", "r1"), rowpack_id = c("p1", "p1"),
+                  rowpack_row = 1:2, sent_tokens = c(10, NA), rec_tokens = c(2, NA))
+  full <- extract_token_counts(d)
+  expect_identical(full$calls, 1L)
+  expect_identical(token_values(full), list(sent = 10, received = 2, total = 12))
+  expect_identical(full[c("unknown", "sent_unknown", "received_unknown")],
+                   list(unknown = 0L, sent_unknown = 0L, received_unknown = 0L))
+  follow <- extract_token_counts(d[2, ])
+  expect_identical(follow$calls, 1L)
+  expect_identical(token_values(follow),
+                   list(sent = NA_real_, received = NA_real_, total = NA_real_))
+  expect_identical(follow$unknown, 1L)
+  d$rowpack_id[1] <- "other"
+  expect_identical(extract_token_counts(d)$unknown, 1L)
+  d$rowpack_id <- NULL
+  expect_identical(extract_token_counts(d)$unknown, 1L)
+})
+
+test_that("invalid values warn once per column and remain unknown", {
+  d <- usage_calls()
+  d$sent_tokens <- factor(d$sent_tokens)
+  expect_warning(out <- extract_token_counts(d), "is factor, not numeric")
+  expect_identical(out$sent, NA_real_)
+  expect_identical(out$sent_unknown, 4L)
+  d$sent_tokens <- c(-1, 1.5, Inf, NaN)
+  d$total_tokens <- NULL
+  expect_warning(out <- extract_token_counts(d), "`sent_tokens` contains invalid counts", fixed = TRUE)
+  expect_identical(token_values(out), list(sent = NA_real_, received = 86, total = NA_real_))
+  expect_identical(out$unknown, 4L)
+  for (value in list(-1, 1.5, Inf, -Inf, NaN, "10", c(1, 2))) {
+    expect_warning(s <- usage_add(NULL, list(calls = 1L, sent = value, received = 2)),
+                   "tokens$sent", fixed = TRUE)
+    expect_identical(s$sent, 0)
+    expect_identical(s$sent_unknown, 1L)
+  }
+})
+
+test_that("large token sums remain doubles and render without scientific notation", {
+  d <- data.frame(response_id = paste0("r", seq_len(3000)),
+                  sent_tokens = 1e6, rec_tokens = 1)
+  out <- extract_token_counts(d)
+  expect_identical(token_values(out), list(sent = 3e9, received = 3000, total = 3000003000))
+  s <- usage_add(NULL, out)
+  s <- usage_add(s, out)
+  expect_identical(token_values(s), list(sent = 6e9, received = 6000, total = 6000006000))
   expect_identical(s$unknown, 0L)
-  s <- usage_add(s, list(calls = 2L))
-  expect_identical(s[c("calls", "sent", "total", "unknown")],
-                   list(calls = 29L, sent = 2700L, total = 3240L, unknown = 2L))
-  p <- usage_add(usage_empty(), list(calls = 1L, sent = NA, received = 5L))
-  expect_identical(p[c("sent", "received", "total", "unknown")],
-                   list(sent = 0L, received = 5L, total = 0L, unknown = 1L))
-  e <- usage_add(usage_empty(), extract_token_counts(NULL, fallback_calls = 4))
-  expect_identical(e$unknown, 4L)
+  expect_match(usage_html(s), "Sent 6000000000 / Received 6000 tokens", fixed = TRUE)
+})
+
+test_that("demonstration rows contribute result rows and no tokens", {
+  demo <- annotate_demo_result(usage_calls()[1:2, ])
+  live <- usage_calls()[3:4, ]
+  live$run_mode <- "live"
+  live$demo_notice <- NA_character_
+  out <- extract_token_counts(rbind(demo, live))
+  expect_identical(out$calls, 2L)
+  expect_identical(out$result_rows, 2L)
+  expect_identical(token_values(out), list(sent = 250, received = 45, total = 295))
+  expect_identical(token_values(extract_token_counts(demo)), list(sent = 0, received = 0, total = 0))
+  live$response_id[1] <- NA
+  expect_warning(out <- extract_token_counts(rbind(demo, live)), "1 of 2 rows")
+  expect_null(out$calls)
+  expect_identical(out$result_rows, 4L)
+})
+
+test_that("usage_add derives only absent totals with complete supplied usage", {
+  expect_identical(usage_add(NULL, list(calls = 1L, sent = 10, received = 2))$total, 12)
+  explicit <- usage_add(NULL, list(calls = 1L, sent = 10, received = 2, total = NA_real_))
+  expect_identical(explicit$total, 0)
+  expect_identical(explicit$unknown, 1L)
+  incomplete <- usage_add(NULL, list(calls = 2L, sent = 10, received = 2, unknown = 2L))
+  expect_identical(incomplete$total, 0)
+  d <- data.frame(response_id = c("a", "b"), sent_tokens = c(10, NA), rec_tokens = c(NA, 2))
+  together <- usage_add(NULL, extract_token_counts(d))
+  apart <- usage_add(usage_add(NULL, extract_token_counts(d[1, ])), extract_token_counts(d[2, ]))
+  expect_identical(together, apart)
+  expect_identical(token_values(together), list(sent = 10, received = 2, total = 0))
+})
+
+test_that("a reported total with missing parts is retained and qualified", {
+  out <- extract_token_counts(data.frame(response_id = "a", total_tokens = 20))
+  expect_identical(token_values(out), list(sent = NA_real_, received = NA_real_, total = 20))
+  expect_identical(out$unknown, 1L)
+  s <- usage_add(NULL, out)
+  expect_identical(token_values(s), list(sent = 0, received = 0, total = 20))
+  expect_match(usage_html(s), "Token usage unknown", fixed = TRUE)
+})
+
+test_that("each displayed component uses its own missing count", {
+  d <- data.frame(response_id = c("a", "b"), sent_tokens = c(0, 0), rec_tokens = c(5, NA))
+  s <- usage_add(NULL, extract_token_counts(d))
+  expect_identical(s$sent_unknown, 0L)
+  expect_identical(s$received_unknown, 1L)
+  expect_match(usage_html(s), "Sent 0 / Received at least 5 tokens", fixed = TRUE)
+  expect_match(usage_html(s), "Usage was not reported for 1 reply.", fixed = TRUE)
+  d$sent_tokens <- c(0, NA)
+  expect_match(usage_html(usage_add(NULL, extract_token_counts(d))),
+               "Sent unknown / Received at least 5 tokens", fixed = TRUE)
+  part <- usage_add(NULL, list(calls = 1L, sent = NA, received = 5))
+  expect_match(usage_html(part), "Sent unknown / Received 5 tokens", fixed = TRUE)
+  expect_match(usage_html(usage_add(NULL, list(calls = 4L))), "Token usage unknown", fixed = TRUE)
+  expect_match(usage_html(usage_empty()), "Sent 0 / Received 0 tokens", fixed = TRUE)
   old <- usage_empty()
-  old$unknown <- NULL
-  expect_identical(
-    usage_add(old, list(calls = 1, sent = 3, received = 4))$unknown, 0L
-  )
-  expect_warning(usage_add(usage_empty(), list(calls = 1, sent = "3")),
-                 "not a single number")
+  old$sent <- NA_real_
+  old$sent_unknown <- old$received_unknown <- NULL
+  expect_match(usage_html(old), "Sent unknown / Received 0 tokens", fixed = TRUE)
+  old <- usage_add(old, list(calls = 1L, sent = 0, received = 0))
+  expect_identical(old$sent_unknown, 0L)
+  expect_identical(old$received_unknown, 0L)
 })
 
-test_that("the usage tile never shows unknown usage as zero", {
-  tile <- function(s) paste(as.character(usage_tile(s)), collapse = " ")
-  expect_match(tile(usage_empty()), "Sent 0 / Received 0 tokens", fixed = TRUE)
-  none <- usage_add(usage_empty(), list(calls = 4L))
-  expect_match(tile(none), "Token usage unknown", fixed = TRUE)
-  expect_match(tile(none), "Usage was not reported for 4 replies.", fixed = TRUE)
-  some <- usage_add(usage_empty(), list(calls = 2, sent = 120, received = 40))
-  some <- usage_add(some, list(calls = 1))
-  expect_match(tile(some), "Sent at least 120 / Received at least 40 tokens",
-               fixed = TRUE)
-  part <- usage_add(usage_empty(), list(calls = 1L, sent = NA, received = 5L))
-  expect_match(tile(part), "Sent unknown / Received at least 5 tokens",
-               fixed = TRUE)
-  expect_no_match(tile(part), "Sent 0", fixed = TRUE)
-})
-
-test_that("an unknown call count is recorded as unknown without an error", {
-  expect_warning(s <- usage_add(usage_empty(), list(calls = NA_integer_)),
-                 "recorded as unknown")
-  expect_identical(s$calls, NA_integer_)
-  html <- paste(as.character(usage_tile(s)), collapse = " ")
-  expect_match(html, "Unknown number of calls", fixed = TRUE)
-  expect_match(html, "Usage was not reported for some replies.", fixed = TRUE)
+test_that("unknown counts stay integers and invalid counts are rejected", {
+  for (field in c("calls", "result_rows")) {
+    expect_warning(s <- usage_add(NULL, setNames(list(NA_integer_), field)), "recorded as unknown")
+    expect_identical(s[[field]], NA_integer_)
+    expect_match(usage_html(s), if (field == "calls") "Unknown number of calls" else "unknown result rows", fixed = TRUE)
+    for (value in c(-1, 0.5, Inf, NaN)) {
+      expect_error(usage_add(NULL, setNames(list(value), field)), "nonnegative whole")
+    }
+  }
+  planned <- usage_set_plan(usage_empty(), 2L, "Tuning")
+  s <- usage_add(planned, list(calls = 2L))
+  expect_identical(s$planned_calls, 0L)
+  expect_identical(s$planned_label, "No pending run")
 })

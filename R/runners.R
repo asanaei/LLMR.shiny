@@ -185,36 +185,62 @@ demo_banner_ui <- function() {
   )
 }
 
-#' Extract call and token counts from a result
+#' Summarize call counts and token usage
 #'
-#' Reads token usage and the number of calls from a call-level result frame,
-#' for [usage_add()]. A count that a row does not report is unknown, not zero:
-#' the sums cover the rows that report a count, and `unknown` counts the rows
-#' missing any of the three. A row's total is its `total_tokens`, or its sent
-#' plus received tokens when both are known. Failed rows (`success = FALSE`)
-#' and rows packed behind another (`rowpack_row` above 1) are not counted as
-#' unknown. A token column that is not numeric, such as a factor, is not read:
-#' its counts are unknown, with a warning.
+#' Reads token counts from a result data frame for use by [usage_add()].
 #'
-#' Calls are counted from the first identifier column among `call_id`,
-#' `request_id`, and `response_id` that every row carries, except failed rows,
-#' which may lack one and count as one call each. Rows sharing an identifier
-#' count as one call, as rows packed into one request do. When identifiers are
-#' incomplete, the rows are counted as `result_rows`, with a warning.
-#' Demonstration rows (see [annotate_demo_result()]) are counted as
-#' `result_rows` and add no tokens.
+#' @details
+#' A row's total is its reported `total_tokens` value. If it is missing,
+#' the total is computed from `sent_tokens` and `rec_tokens` when both are
+#' known. Each component is summed over its reported values, including
+#' failed calls. An absent column supplies missing values. Nonnumeric,
+#' negative, fractional, and non-finite values are treated as missing with
+#' one warning per column. A logical column containing only `NA` is accepted
+#' as missing without a warning.
 #'
-#' @param x A call-level data frame, or a list containing one. In a list, a
-#'   data frame with token columns and call identifiers is used before one
-#'   with token columns only, and either before other data frames, such as
-#'   summaries.
-#' @param fallback_calls Number of calls made when `x` holds no data frame;
-#'   their usage is unknown.
-#' @return A list with `sent`, `received`, and `total` (sums over the rows that
-#'   report each count, or `NA` when none does and some usage is unknown),
-#'   `unknown`, and `calls` when explicit call provenance is available or
-#'   `result_rows` when it is not. A frame mixing demonstration and live rows
-#'   yields both.
+#' The integer `unknown` count includes live rows missing any count after
+#' computing the total. `sent_unknown` and `received_unknown` count rows
+#' missing the respective component. A row with `rowpack_row > 1` is excluded
+#' from these counts only when a live row with the same `rowpack_id` and
+#' `rowpack_row == 1` is present.
+#'
+#' Call identifiers are considered in the order `call_id`, `request_id`,
+#' then `response_id`. The first column with complete identifiers on at
+#' least one live row and on every nonfailed live row is used. Distinct
+#' identifiers count as calls. A list-column may contain several identifiers
+#' per row; missing or empty entries make that row incomplete. Failed rows
+#' (`success = FALSE`) with incomplete identifiers add one call each. If an identifier column exists
+#' but every live row is failed and unidentified, each row counts as one call.
+#'
+#' If no identifier column qualifies, live rows are counted as result rows.
+#' Incomplete identifiers on nonfailed rows produce a warning. Rows with
+#' `run_mode = "demo"` add result rows and no tokens. If `run_mode` is absent,
+#' the `llmrshiny_demo_result` class marks the whole frame as demonstration
+#' output.
+#'
+#' @param x A result data frame, or a list containing data frames. A data
+#'   frame supplied directly is used as given. List components are ranked
+#'   by their columns in the following order.
+#'   \enumerate{
+#'     \item Both call identifiers and tokens.
+#'     \item Call identifiers only.
+#'     \item Tokens only.
+#'     \item Neither.
+#'   }
+#'   Ties use the first frame and produce a warning naming the candidates.
+#' @param fallback_calls A nonnegative whole-number call count used when
+#'   `x` contains no data frame. A positive count has unknown usage.
+#'   `NA` is retained with a warning. Counts must fit in an R integer.
+#' @return A named list with double token subtotals `sent`, `received`, and
+#'   `total`, and integer counts `unknown`, `sent_unknown`, and
+#'   `received_unknown`. A subtotal is `NA` when no value is reported and
+#'   `unknown` is positive; otherwise an empty subtotal is zero.
+#'
+#'   The list contains `calls` when an identifier column qualifies or the
+#'   fallback is used. It also contains `calls` when an identifier column
+#'   exists and every live row is failed and unidentified. Otherwise it
+#'   contains `result_rows`. Demonstration rows add `result_rows`, including
+#'   when identifiable live calls are present.
 #' @examples
 #' calls <- data.frame(response_id = c("r1", "r2", "r3"),
 #'                     sent_tokens = c(100L, 110L, NA),
@@ -225,9 +251,9 @@ extract_token_counts <- function(x, fallback_calls = 0L) {
   df <- find_call_frame(x)
   if (is.null(df)) {
     n <- count_field(fallback_calls, "fallback_calls")
-    known <- if (identical(n, 0L)) 0L else NA_integer_
+    known <- if (identical(n, 0L)) 0 else NA_real_
     return(list(calls = n, sent = known, received = known, total = known,
-                unknown = n))
+                unknown = n, sent_unknown = n, received_unknown = n))
   }
 
   n <- NROW(df)
@@ -248,14 +274,21 @@ extract_token_counts <- function(x, fallback_calls = 0L) {
     rep(FALSE, n)
   }
   pack <- df[["rowpack_row"]]
-  follow_on <- if (is.numeric(pack)) !is.na(pack) & pack > 1 else rep(FALSE, n)
+  pack_id <- df[["rowpack_id"]]
+  follow_on <- rep(FALSE, n)
+  if (is.numeric(pack) && !is.null(pack_id)) {
+    first <- pack_id[live & !is.na(pack) & pack == 1 & !is.na(pack_id)]
+    follow_on <- !is.na(pack) & pack > 1 & !is.na(pack_id) & pack_id %in% first
+  }
   unknown <- sum((is.na(sent) | is.na(received) | is.na(total)) &
-                   !failed[live] & !follow_on[live])
+                   !follow_on[live])
+  sent_unknown <- sum(is.na(sent) & !follow_on[live])
+  received_unknown <- sum(is.na(received) & !follow_on[live])
   observed <- function(v) {
     if (any(!is.na(v)) || unknown == 0L) {
-      as.integer(sum(v, na.rm = TRUE))
+      as.double(sum(v, na.rm = TRUE))
     } else {
-      NA_integer_
+      NA_real_
     }
   }
 
@@ -266,25 +299,37 @@ extract_token_counts <- function(x, fallback_calls = 0L) {
     count$result_rows <- as.integer(sum(demo) + if (is.null(calls)) sum(live) else 0L)
   }
   c(count, list(sent = observed(sent), received = observed(received),
-                total = observed(total), unknown = as.integer(unknown)))
+                total = observed(total), unknown = as.integer(unknown),
+                sent_unknown = as.integer(sent_unknown),
+                received_unknown = as.integer(received_unknown)))
 }
 
 # The data frame in `x` that holds call-level usage: `x` itself, or the first
-# frame in a list ranked by its columns (tokens with call identifiers, then
-# tokens alone, then identifiers alone), so a summary table listed first is
-# not mistaken for the calls.
+# frame in a list ranked by identifiers, then token columns. Tied candidates
+# use list order and produce a warning so the selection is visible.
 find_call_frame <- function(x) {
   if (is.data.frame(x)) return(x)
   if (!is.list(x)) return(NULL)
-  frames <- Filter(is.data.frame, x)
+  positions <- which(vapply(x, is.data.frame, logical(1)))
+  frames <- x[positions]
   if (!length(frames)) return(NULL)
   has_any <- function(cols) {
     vapply(frames, function(d) any(cols %in% names(d)), logical(1))
   }
   tokens <- has_any(c("sent_tokens", "rec_tokens", "total_tokens"))
   ids <- has_any(c("call_id", "request_id", "response_id"))
-  rank <- ifelse(tokens & ids, 1L, ifelse(tokens, 2L, ifelse(ids, 3L, 4L)))
-  frames[[which.min(rank)]]
+  rank <- ifelse(tokens & ids, 1L, ifelse(ids, 2L, ifelse(tokens, 3L, 4L)))
+  best <- which(rank == min(rank))
+  if (length(best) > 1L) {
+    labels <- names(frames)
+    if (is.null(labels)) labels <- rep("", length(frames))
+    unnamed <- is.na(labels) | !nzchar(labels)
+    labels[unnamed] <- as.character(positions[unnamed])
+    warning("Several call frames have the same rank: ",
+            paste(labels[best], collapse = ", "), "; using ", labels[best[1]],
+            ".", call. = FALSE)
+  }
+  frames[[best[1]]]
 }
 
 # A token column as numbers, NA where a row reports nothing. An absent or
@@ -301,6 +346,13 @@ token_column <- function(df, column) {
     ), call. = FALSE)
     return(rep(NA_real_, n))
   }
+  invalid <- is.nan(v) | (!is.na(v) & (!is.finite(v) | v < 0 | v != trunc(v)))
+  if (any(invalid)) {
+    warning(sprintf(
+      "Token column `%s` contains invalid counts; they are treated as unknown.",
+      column), call. = FALSE)
+    v[invalid] <- NA_real_
+  }
   as.numeric(v)
 }
 
@@ -308,20 +360,28 @@ token_column <- function(df, column) {
 # identifier column that covers them all; NULL when no column does. Failed
 # rows need no identifier and count as one call each.
 count_calls <- function(df, rows, failed) {
+  if (!any(rows)) return(NULL)
+  complete <- function(id) {
+    if (is.list(id)) return(length(id) > 0L && all(vapply(id, complete, logical(1))))
+    id <- as.character(id)
+    length(id) > 0L && all(!is.na(id) & nzchar(id))
+  }
   partial <- NULL
+  unidentified_failures <- FALSE
   for (column in intersect(c("call_id", "request_id", "response_id"), names(df))) {
     v <- df[[column]]
-    ids <- lapply(seq_along(v), function(i) {
-      id <- as.character(unlist(v[[i]], use.names = FALSE))
-      id[!is.na(id) & nzchar(id)]
-    })[rows]
-    has <- lengths(ids) > 0L
-    if (!any(has)) next
+    ids <- lapply(v[rows], function(id) as.character(unlist(id, use.names = FALSE)))
+    has <- vapply(v[rows], complete, logical(1))
+    if (!any(has) && all(failed[rows])) {
+      unidentified_failures <- TRUE
+      next
+    }
     if (all(has | failed[rows])) {
-      return(as.integer(length(unique(unlist(ids))) + sum(!has)))
+      return(as.integer(length(unique(unlist(ids[has]))) + sum(!has)))
     }
     if (is.null(partial)) partial <- c(column, sum(!(has | failed[rows])))
   }
+  if (unidentified_failures) return(as.integer(sum(rows)))
   if (!is.null(partial)) {
     warning(sprintf(
       "%s of %d rows have no `%s`, so calls cannot be counted; counting result rows instead.",
@@ -336,12 +396,13 @@ count_calls <- function(df, rows, failed) {
 # not end the session. Anything else must be one nonnegative whole number.
 count_field <- function(x, name) {
   if (!length(x)) return(0L)
-  if (length(x) == 1L && is.na(x)) {
+  if (length(x) == 1L && is.na(x) && !is.nan(x)) {
     warning(sprintf("`%s` is NA; the count is recorded as unknown.", name),
             call. = FALSE)
     return(NA_integer_)
   }
-  if (length(x) != 1L || !is.numeric(x) || x < 0 || x != round(x)) {
+  if (length(x) != 1L || !is.numeric(x) || !is.finite(x) ||
+      x < 0 || x != round(x) || x > .Machine$integer.max) {
     stop(sprintf("`%s` must be one nonnegative whole number.", name),
          call. = FALSE)
   }

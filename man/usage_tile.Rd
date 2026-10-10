@@ -2,17 +2,29 @@
 % Please edit documentation in R/usage.R
 \name{usage_tile}
 \alias{usage_tile}
-\title{A value box reporting session usage}
+\title{Display session usage}
 \usage{
 usage_tile(state)
 }
 \arguments{
-\item{state}{A usage record.}
+\item{state}{A usage record, usually updated by \code{\link[=usage_add]{usage_add()}}, or \code{NULL}.}
 }
 \value{
-A \code{bslib::value_box}.
+A value box created by \code{\link[bslib:value_box]{bslib::value_box()}}.
 }
 \description{
-Token counts are shown as lower bounds ("at least") when some replies did
-not report usage, and as unknown when no reply reported them.
+Creates a value box showing recorded calls, result rows, and sent and
+received token subtotals. A pending run is shown when its planned call
+count is positive.
+}
+\details{
+Each component uses its own unknown count. A zero unknown count gives the
+exact subtotal. Otherwise a zero subtotal is labeled "unknown" and a
+positive subtotal is prefixed by "at least". An \code{NA} subtotal is labeled
+"unknown". If both components are unknown, the box displays
+"Token usage unknown". The \code{unknown} field gives the number of replies
+with incomplete usage in a separate line.
+
+Unknown counts absent from older records are treated as zero. An \code{NA}
+call or result-row count is displayed as unknown.
 }
