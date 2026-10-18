@@ -17,30 +17,77 @@ implement their research workflows.
 
 `shell_sidebar()` supplies provider, model, execution-mode, credential, and
 usage controls. `shell_context()` connects those controls to shared reactive
-values and server helpers.
-
-In your UI:
-
-```r
-bslib::page_navbar(
-  title = "MyStudio",
-  sidebar = LLMR.shiny::shell_sidebar(),
-  bslib::nav_panel("Workflow", my_module_ui("work"))
-)
-```
-
-In your server:
+values and server helpers, and each workflow module receives the same context.
+The app below runs offline. Its module echoes the texts entered, records the
+planned calls before a run and the result rows after it, and shows a card in
+place of a result when the input is empty or the mode is Live.
 
 ```r
-function(input, output, session) {
-  shared <- LLMR.shiny::shell_context(input, output, session)
-  my_module_server("work", shared)
+library(shiny)
+library(LLMR.shiny)
+
+echo_ui <- function(id) {
+  ns <- NS(id)
+  tagList(
+    textAreaInput(ns("texts"), "One text per line", "first text\nsecond text"),
+    actionButton(ns("run"), "Run"),
+    uiOutput(ns("status")),
+    tableOutput(ns("result"))
+  )
 }
+
+echo_server <- function(id, shared) {
+  moduleServer(id, function(input, output, session) {
+    requests <- reactive({
+      lines <- trimws(unlist(strsplit(as.character(input$texts), "\n", fixed = TRUE)))
+      data.frame(text = lines[nzchar(lines)])
+    })
+    observeEvent(requests(), shared$set_plan(nrow(requests()), "Echo run"))
+
+    attempt <- reactiveVal(NULL)
+    observeEvent(input$run, {
+      attempt(safe_llmr_call({
+        if (!identical(shared$mode(), "demo")) {
+          stop("This example makes no live calls; switch the mode to Demo.")
+        }
+        if (nrow(requests()) == 0L) stop("Enter at least one text.")
+        result <- build_runner("demo")(requests())
+        shared$add_usage(extract_token_counts(result))
+        result
+      }))
+    })
+
+    output$status <- renderUI({
+      if (!shared$can_run()) return(live_run_blocker_ui(shared$key()))
+      req(attempt())
+      if (attempt()$ok) demo_banner_ui() else attempt()$ui
+    })
+    output$result <- renderTable({
+      req(attempt()$ok)
+      as_display_table(attempt()$value[c("text", "response_text")])
+    })
+  })
+}
+
+ui <- bslib::page_sidebar(
+  title = "Shared context",
+  sidebar = shell_sidebar(),
+  echo_ui("echo")
+)
+
+server <- function(input, output, session) {
+  shared <- shell_context(input, output, session)
+  echo_server("echo", shared)
+}
+
+shinyApp(ui, server)
 ```
 
-`shared` gives your module `provider()`, `model()`, `mode()`, `key()`,
-`can_run()`, `set_plan()`, and `add_usage()`. A change here is available to any
-module that receives the same context.
+The context gives a module `provider()`, `model()`, `mode()`, the generation
+settings, `key()`, `can_run()`, `set_plan()`, and `add_usage()`. `can_run()`
+is `TRUE` in demonstration mode or when the selected provider's key is set. It
+does not examine a workflow's data or instrument, so each module validates its
+own input, as `echo_server()` does for empty input.
 
 ## Providers, models, and credential status
 
@@ -60,19 +107,26 @@ used by live execution and requires the optional LLMR package.
 
 ## Import data and map columns
 
-`read_csv_upload()` reads a Shiny `fileInput()` value. Column mapping validates
-the selected names before creating the `text` and optional `labels` columns
+`read_csv_upload()` reads a Shiny `fileInput()` value. By default it infers
+each column's type, as `read.csv()` does, so the identifiers `001` and `01`
+both become 1 and the text "NA" becomes missing. Reading every column as
+written keeps identifiers and text intact. Column mapping then validates the
+selected names before creating the `text` and optional `labels` columns
 expected by an application workflow.
 
 ```r
-uploaded <- read_csv_upload(input$file)
+uploaded <- read_csv_upload(input$file, col_classes = "character",
+                            na_strings = character(0))
 validate_column_mapping(uploaded, text_col = input$text_col,
-                         label_col = input$label_col)
+                        label_col = input$label_col)
 mapped <- map_columns(uploaded, text_col = input$text_col,
                       label_col = input$label_col)
 ```
 
-`read_csv_path()` provides the same base R CSV import for a file path.
+Columns that should be numbers or logical values can be converted afterwards
+with `utils::type.convert(x, as.is = TRUE, na.strings = "NA")`, which gives
+the types of the default reading. `read_csv_path()` reads a file path with
+the same options.
 
 ## Select personas
 
