@@ -10,6 +10,10 @@
   counts failed calls, and leaves demonstration rows out.
 * Invalid token values warn and count as unknown. Non-finite or out-of-range
   call and row counts now raise errors.
+* The package requires shiny (>= 1.5.0), which introduced `moduleServer()`,
+  used by `persona_selector_server()`, and bslib (>= 0.5.1), which introduced
+  `tooltip()`, used by `help_tip()` and `shell_sidebar()`. Before, earlier
+  versions installed without complaint and failed when those functions ran.
 
 # LLMR.shiny 0.1.2
 
