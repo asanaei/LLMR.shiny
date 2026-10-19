@@ -1,45 +1,38 @@
-## Resubmission
-
-This resubmits the 0.1.2 declined in late July: CRAN asked that the update
-wait about a week, because 0.1.1 had been published on 2026-07-21 only days
-before. The code is unchanged from that submission; the only difference is
-the order of the NEWS bullets. Three new packages under
-submission (FocusGroup, LLMRcontent, LLMRpanel) declare LLMR.shiny
-(>= 0.1.2) in Suggests and their GUIs call objects that 0.1.2 exports, so
-this update precedes them.
-
 ## The update
 
-0.1.2 corrects the 0.1.1 release: `build_runner("live")` returns a callable
-function, demonstration results carry explicit source fields, usage helpers
-use token vocabulary, and two error-display internals left the exported
-surface while the demo annotator joined it (downstream family packages call
-it across the namespace boundary).
+0.1.3 changes how the shared Studio components read uploaded files and count
+usage. `read_csv_upload()` and `read_csv_path()` gain `col_classes` and
+`na_strings`, so a Studio can keep identifiers such as `001` and the text "NA"
+as written; the defaults reproduce the earlier reading. Token usage that a
+reply did not report is now counted as unknown rather than as zero:
+`extract_token_counts()` and `usage_add()` return and accumulate the number of
+replies with unknown usage, token subtotals are doubles, and the usage tile
+shows lower bounds. Column mapping refuses duplicate or empty column names.
+DESCRIPTION now requires shiny (>= 1.5.0) and bslib (>= 0.5.1), the versions
+that introduced `moduleServer()` and `tooltip()`, which the package calls.
+Exported names are unchanged; each CSV reader gains two arguments with
+defaults.
 
-LLMR is in Suggests, not Imports: demonstration execution, key-state tiles, CSV
-mapping, and usage accounting work without it. Live execution and live
-configuration construction require LLMR and report that requirement when it is
-unavailable. DT remains an optional dependency. The test suite passes without
-forced suggested packages (_R_CHECK_FORCE_SUGGESTS_=false).
+LLMR stays in Suggests: demonstration execution, CSV mapping, and usage
+accounting work without it, and live execution reports the requirement when
+LLMR is unavailable.
 
 ## Test environments
 
-- local macOS (Darwin 25.5.0), R 4.4.3
-- R CMD check --as-cran on the built tarball, with NOT_CRAN=false
-  and _R_CHECK_FORCE_SUGGESTS_=false
+- local macOS 26.7.1 (aarch64-apple-darwin20), R 4.4.3: R CMD check
+  --as-cran --no-manual on the built tarball, with
+  _R_CHECK_FORCE_SUGGESTS_=false
 
 ## R CMD check results
 
-0 errors | 0 warnings | 2 notes
+0 errors | 0 warnings | 1 note
 
 - "checking for future file timestamps ... NOTE: unable to verify current
-  time": environmental (the check machine could not reach a time server); it
-  does not reproduce on CRAN's builders.
-- "checking HTML version of manual ... NOTE": emitted by an older
-  system `tidy` that does not recognize the HTML5 elements R generates;
-  it does not reproduce on CRAN.
+  time": the check machine could not reach a time server.
 
 ## Reverse dependencies
 
-None on CRAN. The author's GUI packages (FocusGroup, LLMRcontent, LLMRpanel)
-Suggest this package and are submitted after it.
+Two CRAN packages suggest LLMR.shiny: FocusGroup 0.5.2 and LLMRpanel 0.6.1.
+Their CRAN tarballs were checked with R CMD check --no-manual
+--ignore-vignettes against this build of LLMR.shiny 0.1.3 and LLMR 0.8.11
+from CRAN. Both returned Status: OK.
