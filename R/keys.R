@@ -131,8 +131,10 @@ key_state_tile <- function(state) {
     bslib::card_body(
       shiny::tags$p(
         paste0(
-          "Live run is disabled for ", state$display, ". Set ",
-          paste(state$env_vars, collapse = " or "), " in ~/.Renviron."
+          "Live run is disabled for ", state$display, ". ",
+          "Add a line like the one below to ~/.Renviron using ",
+          paste(state$env_vars, collapse = " or "),
+          ", then restart R. See https://asanaei.github.io/LLMR/articles/setup.html for the guide."
         )
       ),
       shiny::tags$pre(paste0(state$env_vars[[1]], "=your_key_here"))

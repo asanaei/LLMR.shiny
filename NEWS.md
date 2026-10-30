@@ -1,3 +1,8 @@
+# LLMR.shiny (development version)
+
+* The "API key not found" card now tells users to restart R after adding the key line to ~/.Renviron and points to the LLMR article [Set up a model](https://asanaei.github.io/LLMR/articles/setup.html).
+
+
 # LLMR.shiny 0.1.3
 
 * `read_csv_upload()` and `read_csv_path()` gain `col_classes` and
